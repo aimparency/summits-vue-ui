@@ -4,6 +4,7 @@
     <svg>
       <SVGPath/>
     </svg>
+    <div v-for="node_id, node in state.nodes" :key="node_id"> {{ node }} </div>
   </div>
 </template>
 
