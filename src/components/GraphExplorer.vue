@@ -5,15 +5,15 @@
       class='graph-explorer'
       @click='clearOperations'>
       <g :transform="`scale(${state.map.scale})`">
+        <FlowSVG v-for="flow in flows" 
+          :key="`${flow.from_id}x${flow.into_id}`"
+          :flow="flow"
+        />
         <Connector v-if="state.connectFrom !== undefined"/>
         <NodeSVG v-for="node, node_id in state.nodes" 
           :key="node_id"
           :node="node"
           v-bind="$attrs"
-        />
-        <FlowSVG v-for="flow in flows" 
-          :key="`${flow.from_id}x${flow.into_id}`"
-          :flow="flow"
         />
       </g>
       

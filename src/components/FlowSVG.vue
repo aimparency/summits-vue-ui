@@ -3,6 +3,9 @@
     :fill="fillColor"
     :d="path"
   />
+  <path class="debug"
+    :d="simplePath"
+  />
 </template>
 
 <script lang="ts">
@@ -17,57 +20,98 @@ const colorHash = new ColorHash({ lightness: 0.4 });
 
 const SQR_3_4 = Math.sqrt(3/4); 
 
-function makePath(
+function rotCCW(v: Vector2) : Vector2 {
+  return new Vector2(v.y, -v.x)
+}
+
+function rotCW(v: Vector2) : Vector2 {
+  return new Vector2(v.y, -v.x)
+}
+
+function makeCircularPath(
   from: {x: number, y: number, r: number}, 
   fromShare: number, 
-  to: {x: number, y: number, r: number}
+  into: {x: number, y: number, r: number}
 ) : string {
-
   let mFrom = new Vector2(from.x, from.y)
-  let mTo = new Vector2(to.x, to.y) 
+  let mInto = new Vector2(into.x, into.y) 
 
-  // normalized vector from 'from' to 'to' 
-  const delta = mTo.clone().sub(mFrom)
-  const norm = delta.clone().normalize() 
-  const half = norm.clone().multiplyScalar(0.5)
+  const delta = mInto.clone().sub(mFrom);
+  const R = delta.length();
 
-  const rotatedNorm = new Vector2(norm.y, -norm.x); 
-  
-  // length of the vector from n/2 to the intersection of circle around 0 and around n
-  let side = rotatedNorm.clone().multiplyScalar(SQR_3_4); 
-  let rotatedHalf = rotatedNorm.clone().multiplyScalar(0.5); 
+  const deltaRot = rotCCW(delta); 
 
-  let s0 = half.clone().add(side);
-  let s1 = half.clone().sub(side);
+  // point beween from and into
+  const halfWay = mFrom.clone()
+    .add(mInto)
+    .multiplyScalar(0.5)
 
-  let taille0 = s0.clone().add(new Vector2(-s0.y, s0.x).multiplyScalar(1 - fromShare));
-  let taille1 = s1.clone().add(new Vector2(s1.y, -s1.x).multiplyScalar(1 - fromShare));
+  // center point of arc
+  const M = halfWay.clone()
+    .add(deltaRot.clone().multiplyScalar(SQR_3_4))
 
-  [s0, s1, taille0, taille1].forEach(
-    v => { v.multiplyScalar(from.r * 1000).add(mFrom) }
-  )
+  const getMNorm = (point: Vector2) : Vector2 => {
+    return point.clone()
+      .sub(M)
+      .normalize()
+  }
 
-  let width = fromShare * from.r * 1000; 
-  console.log(width)
+  const getArcPoint = (radius: number) : Vector2 => {
+    const a = Math.pow(radius, 2) / (2 * R); 
+    const h = Math.sqrt(Math.pow(radius, 2) - Math.pow(a, 2)); 
 
-  rotatedHalf.multiplyScalar(width); 
+    const normMToInto = getMNorm(mInto);
 
-  let arrowPoint = mTo.clone().sub(norm.clone().multiplyScalar(to.r * 1000)); 
-  let arrowBegin = arrowPoint.clone().sub(norm.clone().multiplyScalar(width)); 
-  let arrowS0in = arrowBegin.clone().add(rotatedHalf); 
-  let arrowS0out = arrowBegin.clone().add(rotatedHalf.clone().multiplyScalar(1.6)); 
-  let arrowS1in = arrowBegin.clone().sub(rotatedHalf);
-  let arrowS1out = arrowBegin.clone().sub(rotatedHalf.clone().multiplyScalar(1.6)); 
+    const normMToIntoRot = rotCW(normMToInto); 
+
+    return mInto.clone()
+      .sub(normMToInto.clone().multiplyScalar(a))
+      .sub(normMToIntoRot.clone().multiplyScalar(h))
+  }
+
+  const width = from.r * fromShare; 
+
+  const arrowPeak = getArcPoint(into.r); 
+
+  const arrowWings = getArcPoint(into.r + width * 2); 
+  const normMToArrowWings = getMNorm(arrowWings); 
+  const normMToArrowWingsRot = rotCW(normMToArrowWings); 
+
+  const toFarWingSide = normMToArrowWings.clone().multiplyScalar(width); 
+  const toNearWingSide = normMToArrowWings.clone().multiplyScalar(width * 0.5); 
+
+  const wingOuterFar = arrowWings.clone().add(toFarWingSide);
+  const wingOuterNear = arrowWings.clone().add(toNearWingSide);
+  const wingInnerFar = arrowWings.clone().sub(toFarWingSide);
+  const wingInnerNear = arrowWings.clone().sub(toNearWingSide); 
+
+  const normMToMFrom = getMNorm(mFrom); 
+  const toTheSide = normMToMFrom.clone().multiplyScalar(width * 0.5); 
+  const startOuter = mFrom.clone().add(toTheSide); 
+  const startInner = mFrom.clone().sub(toTheSide); 
+
+  const normMToMFromRot = rotCW(normMToMFrom); 
+
+  const outerDistance = wingOuterNear.distanceTo(startOuter); 
+  const outerWingControl = wingOuterNear.clone()
+    .sub(normMToArrowWingsRot.clone().multiplyScalar(outerDistance * 0.34)); 
+  const outerStartControl = startOuter.clone()
+    .add(normMToMFromRot.clone().multiplyScalar(outerDistance * 0.34)); 
+
+  const innerDistance = wingInnerNear.distanceTo(startInner); 
+  const innerWingControl = wingInnerNear.clone()
+    .sub(normMToArrowWingsRot.clone().multiplyScalar(innerDistance * 0.34)); 
+  const innerStartControl = startInner.clone()
+    .add(normMToMFromRot.clone().multiplyScalar(innerDistance * 0.34)); 
 
   return [
-    'M', mFrom, 
-    'L', s1, 
-    'Q', taille1, arrowS1in, 
-    'L', arrowS1out, 
-    'L', arrowPoint, 
-    'L', arrowS0out, 
-    'L', arrowS0in, 
-    'Q', taille0, s0, 
+    'M', startInner, 
+    'C', innerStartControl, innerWingControl, wingInnerNear,  
+    'L', wingInnerFar, 
+    'L', arrowPeak, 
+    'L', wingOuterFar, 
+    'L', wingOuterNear, 
+    'C', outerWingControl, outerStartControl, startOuter, 
     'Z'
   ].map(c => {
     if(c instanceof Vector2) {
@@ -89,7 +133,7 @@ export default defineComponent({
   computed: {
     fillColor() : string {
       if(this.flow.preliminary) {
-        return "#888"; 
+        return "#999"; 
       } else {
         return colorHash.hex(this.flow.from_id); 
       }
@@ -97,10 +141,10 @@ export default defineComponent({
     path() : string {
       const from = this.state.nodes[this.flow.from_id]
       const into = this.state.nodes[this.flow.into_id]
-      return makePath(
-        {x: from.x, y: from.y, r: from.r}, 
+      return makeCircularPath(
+        {x: from.x, y: from.y, r: from.r * 1000}, 
         this.flow.share, 
-        {x: into.x, y: into.y, r: into.r}
+        {x: into.x, y: into.y, r: into.r * 1000}
       ) 
     }, 
     simplePath() : string {

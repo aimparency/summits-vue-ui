@@ -42,10 +42,6 @@ interface NodeSubscriptionMessage {
   node_id: string
 }
 
-interface NodeDesubscriptionMessage {
-  node_id: string
-}
-
 export default defineComponent({
   name: 'App',
   components: {
@@ -84,14 +80,15 @@ export default defineComponent({
         console.log(document.body.clientHeight) 
         this.state.nodes[nodeUpdate.id] = {
           preliminary: false, 
-          x: Math.random() * document.body.clientWidth * 10 , 
-          y: Math.random() * document.body.clientHeight * 10, 
+          x: Math.random() * document.body.clientWidth * 8 + 1, 
+          y: Math.random() * document.body.clientHeight * 8 + 1, 
           r: Math.random() * 0.5 + 0.5, 
           ...nodeUpdate
         } as Node
       }
     }, 
     handleFlowUpdate(flowUpdate: FlowUpdate) {
+      console.log("handling flow update", flowUpdate);
       if(!(flowUpdate.from_id in this.state.flows)) {
         this.state.flows[flowUpdate.from_id] = {
           [flowUpdate.into_id]: {
@@ -140,11 +137,6 @@ export default defineComponent({
     }, 
     createFlow(from: Node, into: Node) {
       console.log("creating flow") 
-      // this has to be replaced 
-      if(this.socket !== undefined) {
-
-      }
-      // create preliminary connection
       let flow = {
         from_id: from.id, 
         into_id: into.id, 
@@ -152,6 +144,19 @@ export default defineComponent({
         share: 0.1, 
         notes: ""
       } as Flow; 
+      // this has to be replaced 
+      if(this.socket !== undefined) {
+        let msg: FlowCreationMessage = {
+          from_id: from.id, 
+          into_id: into.id, 
+          notes: flow.notes, 
+          share: flow.share
+        }
+        this.socket.send(JSON.stringify({
+          FlowCreation: msg 
+        })); 
+      }
+      // create preliminary connection
       if(this.state.flows[from.id] === undefined) {
         this.state.flows[from.id] = {
           [into.id]: flow
