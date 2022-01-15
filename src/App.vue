@@ -1,5 +1,6 @@
 <template>
   <GraphExplorer
+    @createNode="createRandomNode"
     @createFlow="createFlow"/>
 </template>
 
@@ -20,9 +21,7 @@ interface FlowUpdate {
 interface NodeUpdate {
   id: string, 
   title?: string, 
-  notes?: string, 
-  flows_from?: string[], 
-  flows_into?: string[]
+  notes?: string
 }
 
 interface NodeCreationMessage {
@@ -72,6 +71,16 @@ export default defineComponent({
     }) 
   }, 
   methods: {
+    getNodeCreationDefaultFields() {
+      return {
+        preliminary: true, 
+        x: Math.random() * document.body.clientWidth * 8 + 1, 
+        y: Math.random() * document.body.clientHeight * 8 + 1, 
+        r: Math.random() * 0.5 + 0.5, 
+        title: "", 
+        notes: ""
+      }
+    }, 
     handleNodeUpdate(nodeUpdate: NodeUpdate) {
       console.log('received node update' + nodeUpdate) 
       if(nodeUpdate.id in this.state.nodes) {
@@ -79,52 +88,80 @@ export default defineComponent({
       } else {
         console.log(document.body.clientHeight) 
         this.state.nodes[nodeUpdate.id] = {
-          preliminary: false, 
-          x: Math.random() * document.body.clientWidth * 8 + 1, 
-          y: Math.random() * document.body.clientHeight * 8 + 1, 
-          r: Math.random() * 0.5 + 0.5, 
-          ...nodeUpdate
-        } as Node
+          ...this.getNodeCreationDefaultFields(), 
+          ...nodeUpdate, 
+          preliminary: false
+        } 
       }
     }, 
     handleFlowUpdate(flowUpdate: FlowUpdate) {
       console.log("handling flow update", flowUpdate);
-      if(!(flowUpdate.from_id in this.state.flows)) {
-        this.state.flows[flowUpdate.from_id] = {
-          [flowUpdate.into_id]: {
+      let ignoreUpdate = true
+      if(!(flowUpdate.from_id in this.state.nodes)) {
+        if(flowUpdate.into_id in this.state.nodes) {
+          ignoreUpdate = false
+          this.state.nodes[flowUpdate.from_id] = {
+            id: flowUpdate.from_id, 
+            ...this.getNodeCreationDefaultFields()
+          };
+          this.subscribeForNode(flowUpdate.from_id, this.socket!)
+        }
+      } else {
+        ignoreUpdate = false
+        if(!(flowUpdate.into_id in this.state.nodes)) {
+          this.state.nodes[flowUpdate.into_id] = {
+            id: flowUpdate.into_id, 
+            ...this.getNodeCreationDefaultFields()
+          } 
+        }
+      }
+
+      if(!ignoreUpdate) {
+        if(!(flowUpdate.from_id in this.state.flows)) {
+          this.state.flows[flowUpdate.from_id] = {
+            [flowUpdate.into_id]: {
+              ...flowUpdate, 
+              preliminary: false
+            } as Flow
+          }
+        } else if(!(flowUpdate.into_id in this.state.flows[flowUpdate.from_id])) {
+          this.state.flows[flowUpdate.from_id][flowUpdate.into_id] = {
             ...flowUpdate, 
             preliminary: false
           } as Flow
+        } else {
+          Object.assign(this.state.flows[flowUpdate.from_id][flowUpdate.into_id], {
+            notes: flowUpdate.notes, 
+            share: flowUpdate.share, 
+            preliminary: false
+          })
         }
-      } else if(!(flowUpdate.into_id in this.state.flows[flowUpdate.from_id])) {
-        this.state.flows[flowUpdate.from_id][flowUpdate.into_id] = {
-          ...flowUpdate, 
-          preliminary: false
-        } as Flow
-      } else {
-        Object.assign(this.state.flows[flowUpdate.from_id][flowUpdate.into_id], {
-          notes: flowUpdate.notes, 
-          share: flowUpdate.share, 
-          preliminary: false
-        })
       }
     }, 
     handleSevenSummits(node_ids: string[]) {
       if(this.socket !== undefined) {
         console.log("received seven summits: " + node_ids)
         for(let node_id of node_ids) {
-          let msg: NodeSubscriptionMessage = {
-            node_id
-          }; 
-          this.socket.send(JSON.stringify({
-            NodeSubscription: msg 
-          }));
+          this.subscribeForNode(node_id, this.socket)
         }
       }
     },
+    subscribeForNode(node_id: string, socket: WebSocket) {
+      let msg: NodeSubscriptionMessage = {
+        node_id
+      }; 
+      socket.send(JSON.stringify({
+        NodeSubscription: msg 
+      }));
+    }, 
     createRandomNode() {
       if(this.socket !== undefined) {
         let nodeId = uuid(); 
+        this.subscribeForNode(nodeId, this.socket);
+        this.state.nodes[nodeId] = {
+          id: nodeId, 
+          ...this.getNodeCreationDefaultFields()
+        }; 
         let msg: NodeCreationMessage = {
           id: nodeId, 
           title: "node " + nodeId.slice(0,5), 
@@ -141,7 +178,7 @@ export default defineComponent({
         from_id: from.id, 
         into_id: into.id, 
         preliminary: true, 
-        share: 0.1, 
+        share: Math.random() * 0.6 + 0.1, 
         notes: ""
       } as Flow; 
       // this has to be replaced 

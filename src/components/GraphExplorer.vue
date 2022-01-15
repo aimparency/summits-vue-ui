@@ -16,7 +16,6 @@
           v-bind="$attrs"
         />
       </g>
-      
     </svg>
     <div v-for="node, node_id in state.nodes" :key="node_id"> {{ node }} </div>
   </div>
@@ -37,6 +36,7 @@ export default defineComponent({
     FlowSVG, 
     Connector
   },
+  emits: ['createNode'], 
   props: {
   },
   computed: {
@@ -53,8 +53,13 @@ export default defineComponent({
   }, 
   methods: {
     clearOperations() {
-      delete this.state.selectedNode;
-      delete this.state.connectFrom;
+      if(this.state.selectedNode !== undefined ||
+        this.state.connectFrom !== undefined) {
+        delete this.state.selectedNode;
+        delete this.state.connectFrom;
+      } else {
+        this.$emit('createNode') 
+      }
     }
   }
 });

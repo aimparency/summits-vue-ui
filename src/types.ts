@@ -3,14 +3,14 @@ export interface Node {
   // general 
   title: string, 
   notes: string, 
-  flows_from: string[], 
-  flows_into: string[], 
+  // flows_from: string[], 
+  // flows_into: string[], 
   // local
   preliminary: boolean, 
-  relevancy: number,
   x: number, 
   y: number, 
-  r: number
+  r: number, 
+  subscriptionDistance?: number
 }
 
 export interface Flow {
