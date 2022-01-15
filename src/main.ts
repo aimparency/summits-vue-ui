@@ -4,7 +4,18 @@ import State from './state'
 
 let state: State = reactive({
   nodes: {}, 
-  flows: {}
+  flows: {}, 
+  map: {
+    mouse: {
+      x: 0, 
+      y: 0
+    }, 
+    offset: {
+      x: 0, 
+      y: 0 
+    }, 
+    scale: 0.1
+  }
 })
 
 createApp(App)

@@ -1,6 +1,6 @@
 <template>
-  <GraphExplorer/>
-  <button @click='createRandomNode'> create random node </button>
+  <GraphExplorer
+    @createFlow="createFlow"/>
 </template>
 
 <script lang="ts">
@@ -70,6 +70,10 @@ export default defineComponent({
         this.handleSevenSummits(msg.SevenSummits.node_ids); 
       }
     };
+    window.addEventListener("mousemove", (event: MouseEvent) => {
+      this.state.map.mouse.x = event.pageX / this.state.map.scale + this.state.map.offset.x; 
+      this.state.map.mouse.y = event.pageY / this.state.map.scale + this.state.map.offset.y;
+    }) 
   }, 
   methods: {
     handleNodeUpdate(nodeUpdate: NodeUpdate) {
@@ -77,8 +81,12 @@ export default defineComponent({
       if(nodeUpdate.id in this.state.nodes) {
         Object.assign(this.state.nodes[nodeUpdate.id], nodeUpdate)
       } else {
+        console.log(document.body.clientHeight) 
         this.state.nodes[nodeUpdate.id] = {
           preliminary: false, 
+          x: Math.random() * document.body.clientWidth * 10 , 
+          y: Math.random() * document.body.clientHeight * 10, 
+          r: Math.random() * 0.5 + 0.5, 
           ...nodeUpdate
         } as Node
       }
@@ -87,17 +95,20 @@ export default defineComponent({
       if(!(flowUpdate.from_id in this.state.flows)) {
         this.state.flows[flowUpdate.from_id] = {
           [flowUpdate.into_id]: {
-            ...flowUpdate
+            ...flowUpdate, 
+            preliminary: false
           } as Flow
         }
       } else if(!(flowUpdate.into_id in this.state.flows[flowUpdate.from_id])) {
         this.state.flows[flowUpdate.from_id][flowUpdate.into_id] = {
-          ...flowUpdate
+          ...flowUpdate, 
+          preliminary: false
         } as Flow
       } else {
         Object.assign(this.state.flows[flowUpdate.from_id][flowUpdate.into_id], {
           notes: flowUpdate.notes, 
-          share: flowUpdate.share
+          share: flowUpdate.share, 
+          preliminary: false
         })
       }
     }, 
@@ -126,18 +137,47 @@ export default defineComponent({
           NodeCreation: msg
         })); 
       }
+    }, 
+    createFlow(from: Node, into: Node) {
+      console.log("creating flow") 
+      // this has to be replaced 
+      if(this.socket !== undefined) {
+
+      }
+      // create preliminary connection
+      let flow = {
+        from_id: from.id, 
+        into_id: into.id, 
+        preliminary: true, 
+        share: 0.1, 
+        notes: ""
+      } as Flow; 
+      if(this.state.flows[from.id] === undefined) {
+        this.state.flows[from.id] = {
+          [into.id]: flow
+        }
+      } else if (this.state.flows[from.id][into.id] === undefined) {
+        this.state.flows[from.id][into.id] = flow
+      } else {
+        this.$emit("uiError", "connection already exists") 
+      }
+      console.log(JSON.stringify(this.state.flows))
     }
   }
 });
 </script>
 
 <style lang="less">
+* {
+  margin: 0; 
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  width: 100vw; 
+  height: 100vh; 
 }
 </style>
