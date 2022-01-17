@@ -2,7 +2,13 @@ import { Node, Flow } from '@/types'
 
 export default interface State {
   nodes: {[id: string]: Node}, 
-  flows: {[from_id: string]: {[into_id: string]: Flow}}, 
+  flows_from_into: {[from_id: string]: {[into_id: string]: Flow}}, 
+  flows_into_from: {[into_id: string]: {[from_id: string]: Flow}}, 
+
+  /** 
+   * initial set of nodes and every node a user clicks. 
+   * a certain radius in path length of nodes around anchor nodes will be subscribed to. 
+   */
   selectedNode?: Node, 
   connectFrom?: Node, 
   map: {

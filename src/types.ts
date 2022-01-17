@@ -6,11 +6,17 @@ export interface Node {
   // flows_from: string[], 
   // flows_into: string[], 
   // local
-  preliminary: boolean, 
+  updatePending: boolean, 
   x: number, 
   y: number, 
   r: number, 
-  subscriptionDistance?: number
+  /**
+   * seven summits: 2
+   * explicit subscriptions (user selection): 2
+   * lowest level for subscription: 0 
+   * placeholder: -1
+   */
+  subLevel: number 
 }
 
 export interface Flow {
@@ -20,5 +26,5 @@ export interface Flow {
   share: number, 
   notes: string, 
   // local
-  preliminary: boolean 
+  updatePending: boolean 
 }

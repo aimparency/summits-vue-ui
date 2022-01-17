@@ -22,17 +22,17 @@ export default defineComponent({
   computed: {
     path() : string {
       // :d="`M ${state.connectFrom.x},${state.connectFrom.y} L ${state.map.mouse.x},${state.map.mouse.y}`"
-      if(this.state.connectFrom) {
+      if(this.$store.state.connectFrom) {
         return makeCircularPath(
           {
-            x: this.state.connectFrom.x, 
-            y: this.state.connectFrom.y, 
-            r: this.state.connectFrom.r
+            x: this.$store.state.connectFrom.x, 
+            y: this.$store.state.connectFrom.y, 
+            r: this.$store.state.connectFrom.r
           }, 
           0.1 * 1000, 
           {
-            x: this.state.map.mouse.x,		
-            y: this.state.map.mouse.y,		
+            x: this.$store.state.map.mouse.x,		
+            y: this.$store.state.map.mouse.y,		
             r: 0
           }
         )

@@ -31,8 +31,8 @@ export default defineComponent({
       }
     }, 
     path() : string {
-      const from = this.state.nodes[this.flow.from_id]
-      const into = this.state.nodes[this.flow.into_id]
+      const from = this.$store.state.nodes[this.flow.from_id]
+      const into = this.$store.state.nodes[this.flow.into_id]
       return makeCircularPath(
         {x: from.x, y: from.y, r: from.r * 1000}, 
         this.flow.share, 
@@ -40,8 +40,8 @@ export default defineComponent({
       ) 
     }, 
     simplePath() : string {
-      const from = this.state.nodes[this.flow.from_id]
-      const into = this.state.nodes[this.flow.into_id]
+      const from = this.$store.state.nodes[this.flow.from_id]
+      const into = this.$store.state.nodes[this.flow.into_id]
       return `M ${from.x} ${from.y} L ${into.x} ${into.y}`
     }
   },
@@ -59,5 +59,8 @@ export default defineComponent({
 <style scoped lang="less">
 .flow {
   stroke: none;
+  &.selected {
+    z-index: 10; 
+  }
 }
 </style>

@@ -47,10 +47,10 @@ export default defineComponent({
   }, 
   computed: {
     selected() : boolean {
-      return this.state.selectedNode == this.node; 
+      return this.$store.state.selectedNode == this.node; 
     }, 
     showTools() : boolean {
-      return this.selected && this.state.connectFrom == undefined; 
+      return this.selected && this.$store.state.connectFrom == undefined; 
     }, 
     fillColor() : string {
       return colorHash.hex(this.node.id) 
@@ -59,23 +59,23 @@ export default defineComponent({
   methods: {
     select() {
       console.log("clicked on node") 
-      if(this.state.connectFrom !== undefined) {
+      if(this.$store.state.connectFrom !== undefined) {
         console.log("almost emitting createFlow") 
-        if(this.node !== this.state.connectFrom) {
+        if(this.node !== this.$store.state.connectFrom) {
           console.log("emitting createFlow") 
-          this.$emit('createFlow', this.state.connectFrom, this.node);
+          this.$emit('createFlow', this.$store.state.connectFrom, this.node);
         } 
-        delete this.state.connectFrom; 
+        delete this.$store.state.connectFrom; 
       } else {
         if(this.selected) {
-          this.state.selectedNode = undefined; 
+          this.$store.state.selectedNode = undefined; 
         } else {
-          this.state.selectedNode = this.node; 
+          this.$store.state.selectedNode = this.node; 
         }
       }
     }, 
     startConnect() {
-      this.state.connectFrom = this.node;
+      this.$store.state.connectFrom = this.node;
     }
   }
 });

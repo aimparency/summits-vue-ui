@@ -43,8 +43,8 @@ export default defineComponent({
   computed: {
     flows() : Flow[] {
       let flows: Flow[] = []
-      for(let from_id in this.state.flows) {
-        let intoFlows = this.state.flows[from_id]
+      for(let from_id in this.$store.state.flows_from_into) {
+        let intoFlows = this.$store.state.flows_from_into[from_id]
         for(let into_id in intoFlows) {
           flows.push(intoFlows[into_id]) 
         }
@@ -54,10 +54,10 @@ export default defineComponent({
   }, 
   methods: {
     clearOperations() {
-      if(this.state.selectedNode !== undefined ||
-        this.state.connectFrom !== undefined) {
-        delete this.state.selectedNode;
-        delete this.state.connectFrom;
+      if(this.$store.state.selectedNode !== undefined ||
+        this.$store.state.connectFrom !== undefined) {
+        delete this.$store.state.selectedNode;
+        delete this.$store.state.connectFrom;
       } else {
         this.$emit('createNode') 
       }
