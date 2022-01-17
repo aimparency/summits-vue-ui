@@ -87,6 +87,7 @@ export default defineComponent({
   circle {
     cursor: pointer; 
     &.selected {
+      z-index: 11; 
       stroke: #bbb; 
       stroke-width: 100; 
     }

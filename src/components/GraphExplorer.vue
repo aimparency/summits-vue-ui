@@ -13,6 +13,7 @@
         <NodeSVG v-for="node, node_id in state.nodes" 
           :key="node_id"
           :node="node"
+          :display="node !== state.selectedNode"
           v-bind="$attrs"
         />
       </g>
