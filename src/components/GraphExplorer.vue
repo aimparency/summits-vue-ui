@@ -1,24 +1,18 @@
 <template>
   <div class="svgtest">
-    <p> here is a svg element, let's bring this to work in vue </p>
     <svg 
       class='graph-explorer'
       @click='clearOperations'>
-      <g :transform="`scale(${state.map.scale})`">
+      <g :transform="`scale(${$store.state.map.scale})`">
         <FlowSVG v-for="flow in flows" 
           :key="`${flow.from_id}x${flow.into_id}`"
-          :flow="flow"
-        />
-        <Connector v-if="state.connectFrom !== undefined"/>
-        <NodeSVG v-for="node, node_id in state.nodes" 
-          :key="node_id"
-          :node="node"
-          :display="node !== state.selectedNode"
-          v-bind="$attrs"
-        />
+          :flow="flow"/>
+        <Connector v-if="$store.state.connectFrom !== undefined"/>
+        <NodeSVG v-for="node in nodes" 
+          :key="node.id"
+          :node="node"/>
       </g>
     </svg>
-    <div v-for="node, node_id in state.nodes" :key="node_id"> {{ node }} </div>
   </div>
 </template>
 
@@ -28,39 +22,57 @@ import NodeSVG from './NodeSVG.vue';
 import FlowSVG from './FlowSVG.vue';
 import Connector from './Connector.vue';
 
-import { Flow } from '@/types';
+import { ActionTypes } from '@/actions';
+
+import { Flow, Node } from '@/types';
 
 export default defineComponent({
-  name: 'HelloWorld',
+  name: 'GraphExplorer',
   components: {
     NodeSVG, 
     FlowSVG, 
     Connector
   },
-  emits: ['createNode'], 
-  props: {
-  },
   computed: {
     flows() : Flow[] {
       let flows: Flow[] = []
+      let selectedNode = this.$store.state.selectedNode 
+      let selectedNodeId = selectedNode !== undefined ? selectedNode.id : undefined; 
       for(let from_id in this.$store.state.flows_from_into) {
-        let intoFlows = this.$store.state.flows_from_into[from_id]
-        for(let into_id in intoFlows) {
-          flows.push(intoFlows[into_id]) 
+        if(from_id !== selectedNodeId){
+          let intoFlows = this.$store.state.flows_from_into[from_id]
+          for(let into_id in intoFlows) {
+            if(into_id !== selectedNodeId) {
+              flows.push(intoFlows[into_id]) 
+            }
+          }
+        }
+      }
+      if(selectedNode !== undefined) {
+        let subDict = this.$store.state.flows_from_into[selectedNode.id]
+        for(let into_id in subDict) {
+          flows.push(subDict[into_id])
+        }
+        subDict = this.$store.state.flows_into_from[selectedNode.id]
+        for(let from_id in subDict) {
+          flows.push(subDict[from_id])
         }
       }
       return flows; 
-    }
+    }, 
+    nodes() : Node[] {
+      let selectedNode = this.$store.state.selectedNode 
+      const nodes = Object.values(this.$store.state.nodes)
+        .filter((node: Node) => node !== selectedNode)  
+      if(selectedNode !== undefined) {
+        nodes.push(selectedNode) 
+      }
+      return nodes
+    }, 
   }, 
   methods: {
     clearOperations() {
-      if(this.$store.state.selectedNode !== undefined ||
-        this.$store.state.connectFrom !== undefined) {
-        delete this.$store.state.selectedNode;
-        delete this.$store.state.connectFrom;
-      } else {
-        this.$emit('createNode') 
-      }
+      this.$store.dispatch(ActionTypes.NOWHERE_CLICK)
     }
   }
 });

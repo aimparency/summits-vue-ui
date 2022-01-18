@@ -2,7 +2,7 @@ import { MutationTypes } from './mutations';
 import { Store } from 'vuex';
 import State from './state';
 
-export default function mousePositionUpdater() {
+export default function createMousePositionUpdater() {
   return (store: Store<State>) => {
     window.addEventListener("mousemove", (event: MouseEvent) => {
       store.commit(MutationTypes.UPDATE_MOUSE_MAP_POSITION, {

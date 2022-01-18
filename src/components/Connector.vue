@@ -3,8 +3,7 @@
     class="connector"
     fill="white"
     :d="path"
-    :stroke-width="state.connectFrom.r * 100"
-    
+    :stroke-width="$store.state.connectFrom.r * 100"
   />
 </template>
 
@@ -21,7 +20,6 @@ export default defineComponent({
   ], 
   computed: {
     path() : string {
-      // :d="`M ${state.connectFrom.x},${state.connectFrom.y} L ${state.map.mouse.x},${state.map.mouse.y}`"
       if(this.$store.state.connectFrom) {
         return makeCircularPath(
           {

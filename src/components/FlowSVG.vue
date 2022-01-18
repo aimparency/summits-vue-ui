@@ -6,13 +6,12 @@
 </template>
 
 <script lang="ts">
-import ColorHash from 'color-hash' 
+// import Color from 'color'
 import { defineComponent, PropType } from 'vue';
 
 import { Flow } from '@/types';
 
 import makeCircularPath from '@/tools/make-circular-path';
-const colorHash = new ColorHash({ lightness: 0.4 }); 
 
 export default defineComponent({
   name: 'NodeSVG',
@@ -24,11 +23,7 @@ export default defineComponent({
   }, 
   computed: {
     fillColor() : string {
-      if(this.flow.preliminary) {
-        return "#999"; 
-      } else {
-        return colorHash.hex(this.flow.from_id); 
-      }
+      return this.$store.getters.nodeColor(this.flow.from_id)
     }, 
     path() : string {
       const from = this.$store.state.nodes[this.flow.from_id]
@@ -59,8 +54,9 @@ export default defineComponent({
 <style scoped lang="less">
 .flow {
   stroke: none;
-  &.selected {
-    z-index: 10; 
+  &.update-pending {
+    stroke: #999; 
+    stroke-width: 100;
   }
 }
 </style>

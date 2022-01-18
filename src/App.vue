@@ -1,7 +1,5 @@
 <template>
-  <GraphExplorer
-    @createNode="createRandomNode"
-    @createFlow="createFlow"/>
+  <GraphExplorer/>
 </template>
 
 <script lang="ts">

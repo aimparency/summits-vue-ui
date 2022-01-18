@@ -39,3 +39,7 @@ export interface FlowCreation {
 export interface NodeSubscription {
   node_id: string
 }
+
+export interface NodeDesubscription {
+  node_id: string
+}

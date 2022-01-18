@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { Flow, Node } from '@/types'; 
 
 import { ActionTree } from 'vuex';
+import { MutationTypes } from './mutations';
 
 export enum ActionTypes {
   SUBSCRIBE_TO_NODE = 'SUBSCRIBE_TO_NODE',
@@ -17,13 +18,16 @@ export enum ActionTypes {
   PUBLISH_NODE_CREATION = 'PUBLISH_NODE_CREATION',
   CREATE_NEW_FLOW = 'CREATE_NEW_FLOW', 
   PUBLISH_FLOW_CREATION = 'PUBLISH_FLOW_CREATION', 
-  NOTIFY_ABOUT_ERROR = 'NOTIFY_ABOUT_ERROR'
+  UI_ERROR_RAISED = 'UI_ERROR_RAISED', 
+  NODE_CLICK = 'NODE_CLICK', 
+  NOWHERE_CLICK = 'NOWHERE_CLICK', 
+  REMOVE_NODE = 'REMOVE_NODE', 
 }
 
 function createDefaultNode() {
   return {
-    x: Math.random() * document.body.clientWidth * 8 + 1, 
-    y: Math.random() * document.body.clientHeight * 8 + 1, 
+    x: (Math.random() * 9 + 0.5) * document.body.clientWidth, 
+    y: (Math.random() * 9 + 0.5) * document.body.clientHeight, 
     r: Math.random() * 0.5 + 0.5, 
     title: "", 
     notes: "", 
@@ -84,7 +88,7 @@ function create_flow(
 // but maybe typing already works perfectly. 
 
 export const actions: ActionTree<State, State> = {
-  [ActionTypes.SUBSCRIBE_TO_NODE]({}, _payload: Messages.NodeSubscription) {
+  [ActionTypes.SUBSCRIBE_TO_NODE]({}, _nodeId: string) {
     // the aggregatorLink subscribes to this action
   }, 
   [ActionTypes.UPDATE_NODE]({state}, nodeUpdate: Messages.NodeUpdate) {
@@ -107,14 +111,12 @@ export const actions: ActionTree<State, State> = {
         updatePending: true, 
         subLevel: knownNode.subLevel - 1
       }
-      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, {
-        node_id: payload.newNodeId
-      })
-    } else if (knownNode.subLevel = 0) {
+      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, payload.newNodeId)
+    } else if (knownNode.subLevel === 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
         id: payload.newNodeId, 
-        updatePending: true, 
+        updatePending: false, 
         subLevel: -1
       }
     } 
@@ -159,14 +161,14 @@ export const actions: ActionTree<State, State> = {
     ) 
   }, 
   [ActionTypes.INIT]({state, dispatch}, payload: Messages.Init) {
-    for(let node_id of payload.node_ids) {
-      state.nodes[node_id] = {
+    for(let nodeId of payload.node_ids) {
+      state.nodes[nodeId] = {
         ...createDefaultNode(), 
-        id: node_id, 
+        id: nodeId, 
         updatePending: true, 
         subLevel: 2
       }
-      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, { node_id })
+      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, nodeId)
     }
   }, 
   [ActionTypes.CREATE_NEW_NODE]({state, dispatch}, payload: {x: number, y: number}) {
@@ -227,13 +229,52 @@ export const actions: ActionTree<State, State> = {
     ) {
       dispatch(ActionTypes.PUBLISH_FLOW_CREATION, msg)
     } else {
-      dispatch(ActionTypes.NOTIFY_ABOUT_ERROR, 'could not create a new flow, because a flow already exists') 
+      dispatch(ActionTypes.UI_ERROR_RAISED, 'could not create a new flow, because a flow already exists') 
     }
   }, 
   [ActionTypes.PUBLISH_FLOW_CREATION]({}, _payload: Messages.FlowCreation) {
     // only dispatched for aggregator plugin
   }, 
-  [ActionTypes.NOTIFY_ABOUT_ERROR]({}, _errorMessage: string) {
+  [ActionTypes.UI_ERROR_RAISED]({}, _errorMessage: string) {
     // TODO
+  }, 
+  [ActionTypes.NODE_CLICK]({state, commit, dispatch}, node: Node) {
+    if(state.connectFrom !== undefined) {
+      if(node !== state.connectFrom) {
+        dispatch(ActionTypes.CREATE_NEW_FLOW, {
+          from: state.connectFrom, 
+          into: node
+        });
+        commit(MutationTypes.DESELECT_NODE)
+      } 
+      commit(MutationTypes.STOP_CONNECTING)
+    } else {
+      if(state.selectedNode === node) {
+        commit(MutationTypes.DESELECT_NODE)
+      } else {
+        commit(MutationTypes.SELECT_NODE, node)
+      }
+    }
+  }, 
+  [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {
+    if(state.connectFrom !== undefined) {
+      commit(MutationTypes.STOP_CONNECTING); 
+    } else if(state.selectedNode !== undefined) {
+      commit(MutationTypes.DESELECT_NODE); 
+    } else {
+      dispatch(ActionTypes.CREATE_NEW_NODE, {
+        x: state.map.mouse.x, 
+        y: state.map.mouse.y
+      }) 
+    }
+  }, 
+  [ActionTypes.REMOVE_NODE]({state, commit}, node: Node) {
+    for(let intoId in state.flows_from_into[node.id]) {
+      commit(MutationTypes.REMOVE_FLOW, {from: node.id, into: intoId})
+    }
+    for(let fromId in state.flows_into_from[node.id]) {
+      commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: node.id})
+    }
+    commit(MutationTypes.REMOVE_NODE, node.id)
   }
 }

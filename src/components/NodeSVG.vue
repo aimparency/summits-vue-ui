@@ -3,7 +3,7 @@
     :transform="`translate(${node.x} ${node.y})`">
     <g :transform="`scale(${node.r})`">
       <circle 
-        :class="{ selected }"
+        :class="{ selected, loading, placeholder }"
         :fill="fillColor" 
         cx="0" 
         cy="0" 
@@ -11,34 +11,43 @@
         @click.stop='select'
       />
       <text
+        v-if="!placeholder" 
+        class="label"
+        x="0"
+        y="-250">
+        {{ node.subLevel }}
+      </text>
+      <text
+        v-if="!placeholder" 
         class="label"
         x="0"
         y="0">
-        blabla
+        {{ node.updatePending ? 'pending..' : node.title }}
       </text>
       <NodeTools
         v-if="showTools"
-        @startConnect='startConnect'
+        @remove='remove'
+        @connect='connect'
       />
     </g>
   </g>
 </template>
 
 <script lang="ts">
-import ColorHash from 'color-hash' 
 import { defineComponent, PropType } from 'vue';
 import { Node } from '@/types';
 
+import { ActionTypes } from '@/actions'
+import { MutationTypes } from '@/mutations';
+
 import NodeTools from './NodeTools.vue'
 
-const colorHash = new ColorHash({ lightness: 0.4 }); 
 
 export default defineComponent({
   name: 'NodeSVG',
   components: {
-    NodeTools
+    NodeTools, 
   }, 
-  emits: ['createFlow'],
   props: {
     node: {
       type: Object as PropType<Node>,
@@ -49,33 +58,28 @@ export default defineComponent({
     selected() : boolean {
       return this.$store.state.selectedNode == this.node; 
     }, 
+    loading() : boolean {
+      return this.node.updatePending
+    }, 
+    placeholder() : boolean {
+      return this.node.subLevel === -1
+    }, 
     showTools() : boolean {
       return this.selected && this.$store.state.connectFrom == undefined; 
     }, 
     fillColor() : string {
-      return colorHash.hex(this.node.id) 
+      return this.$store.getters.nodeColor(this.node.id)
     }
   },
   methods: {
     select() {
-      console.log("clicked on node") 
-      if(this.$store.state.connectFrom !== undefined) {
-        console.log("almost emitting createFlow") 
-        if(this.node !== this.$store.state.connectFrom) {
-          console.log("emitting createFlow") 
-          this.$emit('createFlow', this.$store.state.connectFrom, this.node);
-        } 
-        delete this.$store.state.connectFrom; 
-      } else {
-        if(this.selected) {
-          this.$store.state.selectedNode = undefined; 
-        } else {
-          this.$store.state.selectedNode = this.node; 
-        }
-      }
+      this.$store.dispatch(ActionTypes.NODE_CLICK, this.node)
     }, 
-    startConnect() {
-      this.$store.state.connectFrom = this.node;
+    connect() {
+      this.$store.commit(MutationTypes.START_CONNECTING, this.node)
+    }, 
+    remove() {
+      this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node) 
     }
   }
 });
@@ -86,19 +90,51 @@ export default defineComponent({
 .node {
   circle {
     cursor: pointer; 
+    transition: stroke-dasharray;  
+    stroke-width: 75;
+    &.loading{
+      stroke: #ccc; 
+      animation: dash 1.5s ease-in-out infinite;
+      stroke-linecap: round;
+    }
     &.selected {
-      z-index: 11; 
-      stroke: #bbb; 
-      stroke-width: 100; 
+      stroke: #ccc; 
+      animation: none; 
+    }
+    &.placeholder {
+      stroke: #999; 
+      fill: #444; 
     }
   }
   text {
     fill: #fff; 
     font-size: 250px;
+    font-family: monospace;
     text-anchor: middle; 
     dominant-baseline: central; 
     user-select: none; 
     pointer-events: none; 
+  }
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 0, 3141;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 3141 / 2, 3141 / 2;
+    stroke-dashoffset: -3141 / 2;
+  }
+  100% {
+    stroke-dasharray: 0, 3141;
+    stroke-dashoffset: -3141 * 2;
   }
 }
 </style>
