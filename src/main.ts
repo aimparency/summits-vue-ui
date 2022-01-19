@@ -9,6 +9,7 @@ import { getters } from './getters'
 
 import createAggregatorLink from './aggregator-link'
 import createMousePositionUpdater from './mouse-position-updater';
+import { Vector2 } from 'three';
 
 const store = createStore({
   state () : State {
@@ -17,14 +18,8 @@ const store = createStore({
       flows_from_into: {}, 
       flows_into_from: {},
       map: {
-        mouse: {
-          x: 0, 
-          y: 0
-        }, 
-        offset: {
-          x: 0,
-          y: 0
-        }, 
+        mouse: new Vector2(0,0), 
+        offset: new Vector2(0,0),
         scale: 0.1, 
         panBeginning: undefined
       }

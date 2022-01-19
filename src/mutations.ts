@@ -2,6 +2,7 @@ import State from './state'
 import { MutationTree } from 'vuex'
 
 import { Node } from './types'
+import { Vector2 } from 'three'
 
 export enum MutationTypes {
   UPDATE_MOUSE_MAP_POSITION = 'UPDATE_MOUSE_MAP_POSITION', 
@@ -15,7 +16,7 @@ export enum MutationTypes {
 }
 
 export const mutations: MutationTree<State> = {
-  [MutationTypes.UPDATE_MOUSE_MAP_POSITION](state: State, position: {x: number, y: number}) {
+  [MutationTypes.UPDATE_MOUSE_MAP_POSITION](state: State, position: Vector2) {
     state.map.mouse = position
   }, 
   [MutationTypes.DESELECT_NODE](state: State) {

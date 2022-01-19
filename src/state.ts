@@ -1,4 +1,5 @@
-import { Node, Flow } from '@/types'
+import { Node, Flow } from '@/types';
+import { Vector2 } from 'three';
 
 export default interface State {
   nodes: {[id: string]: Node}, 
@@ -12,11 +13,7 @@ export default interface State {
   selectedNode?: Node, 
   connectFrom?: Node, 
   map: {
-    mouse: {
-      x: number, 
-      y: number
-    }, 
-    /** Offset is in map coordinates. 
+    mouse: Vector2,    /** Offset is in map coordinates. 
      * assume the mouse pointer is in the upper left corner, 
      * zooming in would not change the offset. 
      * that means offset always means the top left corner in map-coordinates */
@@ -24,13 +21,10 @@ export default interface State {
      * from model coordinates to screen coordinates
      */
     scale: number, 
-    offset: { 
-      x: number, 
-      y: number
-    }, 
+    offset: Vector2, 
     panBeginning: undefined | {
-      offset: { x: number, y: number}, 
-      page: {x: number, y: number}
+      offset: Vector2, 
+      page: Vector2
     }
   }
 }

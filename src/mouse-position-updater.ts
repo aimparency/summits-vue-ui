@@ -2,13 +2,14 @@ import { MutationTypes } from './mutations';
 import { ActionTypes } from './actions'; 
 import { Store } from 'vuex';
 import State from './state';
+import { Vector2 } from 'three';
 
 export default function createMousePositionUpdater() {
   let justPanned = false; 
 
   return (store: Store<State>) => {
 
-    const pageToSVGCoords = (x: number, y: number) => {
+    const pageToSVGCoords = (x: number, y: number) : Vector2 => {
       const map = store.state.map; 
       let halfSide, xOffset, yOffset
       if(window.innerWidth < window.innerHeight) {
@@ -20,10 +21,10 @@ export default function createMousePositionUpdater() {
         xOffset = (window.innerWidth - window.innerHeight) / 2
         yOffset = 0
       }
-      return {
-        x: ((x - xOffset) / halfSide - 1) / map.scale + map.offset.x, 
-        y: ((y - yOffset) / halfSide - 1) / map.scale + map.offset.y
-      }
+      return new Vector2 (
+        ((x - xOffset) / halfSide - 1) / map.scale + map.offset.x, 
+        ((y - yOffset) / halfSide - 1) / map.scale + map.offset.y
+      )
     }
     window.addEventListener("mousemove", (e: MouseEvent) => {
       if(store.state.connectFrom !== undefined) {
@@ -38,10 +39,13 @@ export default function createMousePositionUpdater() {
     });
 
     window.addEventListener("wheel", (e: WheelEvent) => {
-      e.preventDefault();
-      const previous = store.state.map.scale
-      store.state.map.scale *= Math.pow(1.1, e.deltaY / 150)
-
+      const map = store.state.map
+      const f = Math.pow(1.1, e.deltaY / 150)
+      let mouseBefore = pageToSVGCoords(e.pageX, e.pageY)
+      map.scale *= f
+      let mouseAfter = pageToSVGCoords(e.pageX, e.pageY) 
+      let delta = mouseAfter.clone().sub(mouseBefore)
+      map.offset.sub(delta) 
     })
 
     const updatePan = (x: number, y: number) => {
@@ -64,11 +68,8 @@ export default function createMousePositionUpdater() {
     }
     const beginPan = (x:number, y:number) => {
       store.state.map.panBeginning = {
-        page: {x, y}, 
-        offset: {
-          x: store.state.map.offset.x, 
-          y: store.state.map.offset.y
-        }
+        page: new Vector2(x, y), 
+        offset: store.state.map.offset.clone()
       }
     }
     const endPan = (x: number, y: number) => {
