@@ -22,10 +22,11 @@ const store = createStore({
           y: 0
         }, 
         offset: {
-          x: 0, 
-          y: 0 
+          x: 0,
+          y: 0
         }, 
-        scale: 0.1
+        scale: 0.1, 
+        panBeginning: undefined
       }
     }
   }, 

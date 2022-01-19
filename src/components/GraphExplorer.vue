@@ -2,8 +2,12 @@
   <div class="svgtest">
     <svg 
       class='graph-explorer'
-      @click='clearOperations'>
-      <g :transform="`scale(${$store.state.map.scale})`">
+      viewBox="-1 -1 2 2">
+      <circle
+        cx='0'
+        cy='0'
+        r='50'/>
+      <g :transform="transform">
         <FlowSVG v-for="flow in flows" 
           :key="`${flow.from_id}x${flow.into_id}`"
           :flow="flow"/>
@@ -34,6 +38,13 @@ export default defineComponent({
     Connector
   },
   computed: {
+    transform() : string {
+      const map = this.$store.state.map;
+      return [
+        `scale(${map.scale})`, 
+        `translate(${-map.offset.x}, ${-map.offset.y})`, 
+      ].join(' ')
+    }, 
     flows() : Flow[] {
       let flows: Flow[] = []
       let selectedNode = this.$store.state.selectedNode 
@@ -70,11 +81,6 @@ export default defineComponent({
       return nodes
     }, 
   }, 
-  methods: {
-    clearOperations() {
-      this.$store.dispatch(ActionTypes.NOWHERE_CLICK)
-    }
-  }
 });
 </script>
 
@@ -87,5 +93,6 @@ export default defineComponent({
   background-color: #202101; 
   width: 100vw; 
   height: 100vh; 
+  cursor: move;
 }
 </style>

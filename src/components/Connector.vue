@@ -27,7 +27,7 @@ export default defineComponent({
             y: this.$store.state.connectFrom.y, 
             r: this.$store.state.connectFrom.r
           }, 
-          0.1 * 1000, 
+          0.2, 
           {
             x: this.$store.state.map.mouse.x,		
             y: this.$store.state.map.mouse.y,		

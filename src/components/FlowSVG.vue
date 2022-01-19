@@ -29,9 +29,9 @@ export default defineComponent({
       const from = this.$store.state.nodes[this.flow.from_id]
       const into = this.$store.state.nodes[this.flow.into_id]
       return makeCircularPath(
-        {x: from.x, y: from.y, r: from.r * 1000}, 
+        {x: from.x, y: from.y, r: from.r}, 
         this.flow.share, 
-        {x: into.x, y: into.y, r: into.r * 1000}
+        {x: into.x, y: into.y, r: into.r}
       ) 
     }, 
     simplePath() : string {

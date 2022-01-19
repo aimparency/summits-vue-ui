@@ -26,8 +26,8 @@ export enum ActionTypes {
 
 function createDefaultNode() {
   return {
-    x: (Math.random() * 9 + 0.5) * document.body.clientWidth, 
-    y: (Math.random() * 9 + 0.5) * document.body.clientHeight, 
+    x: (Math.random() * 18 - 9),
+    y: (Math.random() * 18 - 9), 
     r: Math.random() * 0.5 + 0.5, 
     title: "", 
     notes: "", 
@@ -37,7 +37,7 @@ function createDefaultNode() {
 function createDefaultFlow() {
   return {
     notes: "", 
-    share: Math.random() * 0.5 + 0.1
+    share: Math.random() * 0.25 + 0.01
   }
 }
 
@@ -202,7 +202,7 @@ export const actions: ActionTree<State, State> = {
       from_id: payload.from.id, 
       into_id: payload.into.id, 
       updatePending: true, 
-      share: Math.random() * 0.6 + 0.1, 
+      share: Math.random() * 0.25 + 0.01, 
       notes: ""
     };
 

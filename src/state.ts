@@ -20,10 +20,17 @@ export default interface State {
      * assume the mouse pointer is in the upper left corner, 
      * zooming in would not change the offset. 
      * that means offset always means the top left corner in map-coordinates */
+    /** Maybe better: first offset is added, then scale is applied 
+     * from model coordinates to screen coordinates
+     */
     scale: number, 
     offset: { 
       x: number, 
       y: number
+    }, 
+    panBeginning: undefined | {
+      offset: { x: number, y: number}, 
+      page: {x: number, y: number}
     }
   }
 }

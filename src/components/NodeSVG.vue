@@ -7,14 +7,14 @@
         :fill="fillColor" 
         cx="0" 
         cy="0" 
-        r="1000"
+        r="1"
         @click.stop='select'
       />
       <text
         v-if="!placeholder" 
         class="label"
         x="0"
-        y="-250">
+        y="-0.25">
         {{ node.subLevel }}
       </text>
       <text
@@ -91,7 +91,7 @@ export default defineComponent({
   circle {
     cursor: pointer; 
     transition: stroke-dasharray;  
-    stroke-width: 75;
+    stroke-width: 0.075;
     &.loading{
       stroke: #ccc; 
       animation: dash 1.5s ease-in-out infinite;
@@ -108,7 +108,7 @@ export default defineComponent({
   }
   text {
     fill: #fff; 
-    font-size: 250px;
+    font-size: 0.25px;
     font-family: monospace;
     text-anchor: middle; 
     dominant-baseline: central; 
@@ -125,16 +125,16 @@ export default defineComponent({
 
 @keyframes dash {
   0% {
-    stroke-dasharray: 0, 3141;
+    stroke-dasharray: 0, 3.141;
     stroke-dashoffset: 0;
   }
   50% {
-    stroke-dasharray: 3141 / 2, 3141 / 2;
-    stroke-dashoffset: -3141 / 2;
+    stroke-dasharray: 3.141 / 2, 3.141 / 2;
+    stroke-dashoffset: -3.141 / 2;
   }
   100% {
-    stroke-dasharray: 0, 3141;
-    stroke-dashoffset: -3141 * 2;
+    stroke-dasharray: 0, 3.141;
+    stroke-dashoffset: -3.141 * 2;
   }
 }
 </style>
