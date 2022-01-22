@@ -23,6 +23,9 @@ export enum ActionTypes {
   FLOW_CLICK = 'FLOW_CLICK', 
   NOWHERE_CLICK = 'NOWHERE_CLICK', 
   REMOVE_NODE = 'REMOVE_NODE', 
+  REMOVE_NODE_LOCALLY_TRIGGERED = 'REMOVE_NODE_LOCALLY_TRIGGERED', 
+  COMPARE_AND_RAISE = 'COMPARE_AND_RAISE', 
+  SPILL_SUB_LEVEL = 'SPILL_SUB_LEVEL',
 }
 
 function createDefaultNode() {
@@ -140,7 +143,10 @@ export const actions: ActionTree<State, State> = {
           newNodeId: flowUpdate.into_id
         }) 
       } else {
-        // check if one of the nodes raises the subLevel of the other => raise, recurse. dispatch RAISE_SUB_LEVEL
+        dispatch(ActionTypes.COMPARE_AND_RAISE, {
+          a: state.nodes[flowUpdate.from_id], 
+          b: state.nodes[flowUpdate.into_id]
+        })
       }
     }
     if(!ignoreUpdate) {
@@ -160,6 +166,35 @@ export const actions: ActionTree<State, State> = {
       flowUpdate.from_id, 
       flowUpdate
     ) 
+  }, 
+  [ActionTypes.COMPARE_AND_RAISE]({dispatch}, payload: {a: Node, b: Node}) {
+    let raiseNode : Node | undefined 
+    let newLevel =  0
+    if(payload.a.subLevel > payload.b.subLevel + 1) {
+      raiseNode = payload.b
+      newLevel = payload.a.subLevel - 1
+    } else if (payload.b.subLevel > payload.a.subLevel + 1) {
+      raiseNode = payload.a
+      newLevel = payload.b.subLevel - 1
+    }
+    if(raiseNode) {
+      if(raiseNode.subLevel == -1) {
+        dispatch(ActionTypes.SUBSCRIBE_TO_NODE, raiseNode.id) 
+      }
+      raiseNode.subLevel = newLevel
+      dispatch(ActionTypes.SPILL_SUB_LEVEL, raiseNode.id)
+    }
+  }, 
+  [ActionTypes.SPILL_SUB_LEVEL]({state, dispatch}, nodeId: string) {
+    const from_flows = Object.values(state.flows_into_from[nodeId] || {})
+    const into_flows = Object.values(state.flows_from_into[nodeId] || {})
+    const flows = from_flows.concat(into_flows) 
+    for(let flow of flows) {
+      dispatch(ActionTypes.COMPARE_AND_RAISE, {
+        a: state.nodes[flow.from_id], 
+        b: state.nodes[flow.into_id]
+      })
+    }
   }, 
   [ActionTypes.INIT]({state, dispatch}, payload: Messages.Init) {
     for(let nodeId of payload.node_ids) {
@@ -297,13 +332,17 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.REMOVE_NODE]({state, commit}, node: Node) {
-    for(let intoId in state.flows_from_into[node.id]) {
-      commit(MutationTypes.REMOVE_FLOW, {from: node.id, into: intoId})
-    }
-    for(let fromId in state.flows_into_from[node.id]) {
-      commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: node.id})
-    }
-    commit(MutationTypes.REMOVE_NODE, node.id)
+  [ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED]({dispatch}, nodeId: string) {
+    dispatch(ActionTypes.REMOVE_NODE, nodeId)
   }, 
+  [ActionTypes.REMOVE_NODE]({state, commit}, nodeId: string) {
+    console.log("removing node") 
+    for(let intoId in state.flows_from_into[nodeId]) {
+      commit(MutationTypes.REMOVE_FLOW, {from: nodeId, into: intoId})
+    }
+    for(let fromId in state.flows_into_from[nodeId]) {
+      commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: nodeId})
+    }
+    commit(MutationTypes.REMOVE_NODE, nodeId)
+  }
 }

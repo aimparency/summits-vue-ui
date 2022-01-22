@@ -43,3 +43,9 @@ export interface NodeSubscription {
 export interface NodeDesubscription {
   node_id: string
 }
+
+// both directions
+export interface NodeRemoval {
+  node_id: string 
+}
+

@@ -1,5 +1,4 @@
 import { ActionTypes } from './actions';
-import { MutationTypes } from './mutations';
 import { Store } from 'vuex';
 import State from './state';
 import * as Messages from './messages';
@@ -15,6 +14,10 @@ export default function createAggregatorLink () {
         store.dispatch(ActionTypes.UPDATE_FLOW, msg.FlowUpdate as Messages.FlowUpdate); 
       } else if("SevenSummits" in msg) {
         store.dispatch(ActionTypes.INIT, msg.SevenSummits as Messages.Init); 
+      } else if("NodeRemoval" in msg) {
+        console.log("received a node removal from aggregator") 
+        const nodeRemoval = msg.NodeRemoval as Messages.NodeRemoval; 
+        store.dispatch(ActionTypes.REMOVE_NODE, nodeRemoval.node_id); 
       }
     };
 
@@ -33,21 +36,12 @@ export default function createAggregatorLink () {
         socket.send(JSON.stringify({
           FlowCreation: action.payload
         })); 
-      } else if (action.type === ActionTypes.REMOVE_NODE) {
+      } else if(action.type === ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED) {
+        const nodeRemoval = {
+          node_id: action.payload
+        }
         socket.send(JSON.stringify({
-          NodeDesubscription: {
-            node_id: action.payload.id
-          }
-        })); 
-      }
-    }); 
-
-    store.subscribe(mutation => {
-      if(mutation.type === MutationTypes.REMOVE_NODE) {
-        socket.send(JSON.stringify({
-          NodeRemoval: {
-            node_id: mutation.payload
-          }
+          NodeRemoval: nodeRemoval
         })); 
       }
     }); 

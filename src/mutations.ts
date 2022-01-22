@@ -56,12 +56,12 @@ export const mutations: MutationTree<State> = {
     delete state.flows_into_from[ids.into][ids.from]
   }, 
   [MutationTypes.REMOVE_NODE](state, nodeId: string) {
-    delete state.nodes[nodeId]
     if(state.selectedNode !== undefined) {
       if(state.selectedNode.id === nodeId) {
         delete state.selectedNode 
       }
     }
+    delete state.nodes[nodeId]
   },
   [MutationTypes.UPDATE_NODE_TITLE](_state, payload: {node: Node, title: string}) {
     payload.node.title = payload.title

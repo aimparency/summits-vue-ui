@@ -103,7 +103,7 @@ export default defineComponent({
       this.$store.commit(MutationTypes.START_CONNECTING, this.node)
     }, 
     remove() {
-      this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node) 
+      this.$store.dispatch(ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED, this.node.id) 
     }
   }
 });
