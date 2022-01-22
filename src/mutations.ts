@@ -27,6 +27,8 @@ export enum MutationTypes {
   ACTIVATE_PANNING = 'ACTIVATE_PANNING', 
   
   STOP_PANNING = 'STOP_PANNING', 
+
+  TOGGLE_MENU = 'TOGGLE_MENU'
 }
 
 export const mutations: MutationTree<State> = {
@@ -80,5 +82,8 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.STOP_PANNING](state) {
     state.map.panning = false 
+  }, 
+  [MutationTypes.TOGGLE_MENU](state) {
+    state.menu.open = !state.menu.open
   }
 }

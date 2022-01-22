@@ -27,7 +27,17 @@ export default defineComponent({
   }, 
   computed: {
     selected() : boolean {
-      return this.flow === this.$store.state.selectedFlow;
+      console.log(
+        JSON.stringify(this.flow), 
+      );
+      console.log(
+        JSON.stringify(this.$store.state.selectedFlow)
+      );
+      console.log(this.flow) 
+      console.log(this.$store.state.selectedFlow) 
+      let identical = this.flow == this.$store.state.selectedFlow;
+      console.log("identical?", identical)
+      return identical 
     }, 
     fillColor() : string {
       const selectedNode = this.$store.state.selectedNode;

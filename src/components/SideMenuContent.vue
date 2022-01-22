@@ -1,8 +1,11 @@
 <template>
-  <div class="container">
+  <div 
+    ref="container"
+    @mousewheel.stop="scroll"
+    class="container">
     <div 
-      :style="{transform: `translate(0px, ${scrollY}px)`}"
-      @mousewheel.stop="scroll"
+      ref="content"
+      :style="{transform: `translate(0px, ${-scrollY}px)`}"
       class='side-menu-content'>
       <slot></slot>
     </div>
@@ -24,7 +27,9 @@ export default defineComponent({
   methods: {
     scroll(e: WheelEvent) {
       console.log('scroll', e) 
-      this.scrollY += e.deltaY; 
+      this.scrollY = Math.min(
+        Math.max(0, this.scrollY + e.deltaY), 
+      )
     }
   }
 });
@@ -35,6 +40,7 @@ export default defineComponent({
 @import '~@/global.less'; 
 
 .container {
+  overflow: hidden; 
   .side-menu-content{
     padding: 0.5rem; 
     color: @foreground; 

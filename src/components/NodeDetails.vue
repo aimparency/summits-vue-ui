@@ -112,13 +112,15 @@ export default defineComponent({
 <style scoped lang="less">
 @import '~@/global.less'; 
 
+h4 {
+  font-size: 1rem;
+  margin: 0; 
+  padding: 0; 
+  text-align: center;
+}
+
 .node-details{
   color: @foreground; 
-  text-align: center;
-  h4 {
-    font-size: 1rem;
-    text-align: center;
-  }
   .title{
     font-size: 1.5rem;
     margin-bottom:0.5rem; 

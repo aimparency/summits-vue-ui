@@ -46,7 +46,7 @@ export default defineComponent({
   }, 
   created() {
     const updateOrientation = () => {
-      if(window.innerHeight / 1.9 > window.innerWidth) {
+      if(window.innerHeight / 1.7 > window.innerWidth) {
         this.style = 'full'
       } else {
         this.style = 'half'
@@ -69,7 +69,7 @@ export default defineComponent({
   background-color: @background; 
   box-sizing: border-box;
   text-align: left; 
-  left: calc(100vw - 3rem); 
+  left: calc(100vw - 3.25rem); 
   transition: left 0.3s; 
   border-bottom-left-radius: 1rem;
   border-top-left-radius: 1rem;
@@ -84,7 +84,7 @@ export default defineComponent({
   }
   &.half{
     width: 50vh; 
-    &:hover, &.open{
+    &.open{
       left: calc(100vw - 50vh); 
     }
   }

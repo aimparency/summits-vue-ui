@@ -45,47 +45,64 @@ function createDefaultFlow() {
   }
 }
 
-function update_or_create_flow(
-  doubleDict: {[x: string]: {[y: string]: Flow }}, 
-  x: string, 
-  y: string, 
-  flowUpdate: Messages.FlowUpdate
-) {
-  if(!(x in doubleDict)) {
-    doubleDict[x] = {} 
-  } 
-  const subDict = doubleDict[x]
-  if(!(y in subDict)) {
-    subDict[y] = {
-      ...createDefaultFlow(), 
-      ...flowUpdate, 
-      updatePending: false
-    }
-  } else {
-    Object.assign([y], {
-      ...flowUpdate, 
-      updatePending: false
-    })
+function get_flow(state: State, fromId: string, intoId: string) : Flow | undefined { 
+  let from_into_flow = flow_exists_in_dict(
+    state.flows_from_into, 
+    fromId, 
+    intoId
+  )
+  let into_from_flow = flow_exists_in_dict(
+    state.flows_into_from, 
+    intoId, 
+    fromId
+  )
+  if(from_into_flow !== undefined && from_into_flow !== into_from_flow) {
+    return from_into_flow
   }
 }
 
-function create_flow(
-  doubleDict: {[x: string]: {[y: string]: Flow}}, 
-  x: string, 
-  y: string, 
-  flow: Flow
-) {
-  if(!(x in doubleDict)) {
-    doubleDict[x] = {}
-  }
-  const subDict = doubleDict[x]
-  if(!(y in subDict)) {
-    subDict[y] = flow
-    return true
-  } else {
-    return false
+function set_flow(state: State, flow: Flow) {
+  let proxy = set_flow_in_dict(
+    state.flows_from_into, 
+    flow.from_id, 
+    flow.into_id, 
+    flow
+  ) 
+  set_flow_in_dict(
+    state.flows_into_from, 
+    flow.into_id, 
+    flow.from_id, 
+    proxy // we use the same proxy otherwise we can't compare flow identity. 
+  )
+}
+
+type Dict = {[x: string]: {[y: string]: Flow}}
+
+function flow_exists_in_dict(
+  dict: Dict, 
+  i1: string, 
+  i2: string
+) : Flow | undefined {
+  if(i1 in dict) {
+    return dict[i1][i2] 
   }
 }
+
+function set_flow_in_dict(
+  dict: Dict, 
+  i1: string, 
+  i2: string,
+  flow: Flow
+) : Flow {
+  if(!(i1 in dict)) {
+    dict[i1] = {}
+  }
+  return dict[i1][i2] = flow
+}
+
+function set_flow_in_double_dict(state: State, flow: Flow) {
+}
+
 
 // maybe make a interface Actions with all the types only... To make typing be precise
 // check here: https://dev.to/3vilarthas/vuex-typescript-m4j
@@ -154,18 +171,20 @@ export const actions: ActionTree<State, State> = {
     }
   }, 
   [ActionTypes.UPDATE_OR_CREATE_FLOW]({state}, flowUpdate: Messages.FlowUpdate) {
-    update_or_create_flow(
-      state.flows_from_into, 
-      flowUpdate.from_id, 
-      flowUpdate.into_id, 
-      flowUpdate, 
-    ) 
-    update_or_create_flow(
-      state.flows_into_from, 
-      flowUpdate.into_id, 
-      flowUpdate.from_id, 
-      flowUpdate
-    ) 
+    let flow = get_flow(state, flowUpdate.from_id, flowUpdate.into_id); 
+    if(flow === undefined) {
+      flow = {
+        ...createDefaultFlow(), 
+        ...flowUpdate, 
+        updatePending: false
+      }
+    } else {
+      Object.assign(flow, {
+        ...flowUpdate, 
+        updatePending: false
+      })
+    }
+    set_flow(state, flow) 
   }, 
   [ActionTypes.COMPARE_AND_RAISE]({dispatch}, payload: {a: Node, b: Node}) {
     let raiseNode : Node | undefined 
@@ -223,8 +242,6 @@ export const actions: ActionTree<State, State> = {
 
     state.selectedNode = node;
 
-    state.menu.open = true; 
-
     let msg: Messages.NodeCreation = {
       id: node.id, 
       title: node.title, 
@@ -253,23 +270,11 @@ export const actions: ActionTree<State, State> = {
       share: flow.share
     }
 
-    if(
-      create_flow(
-        state.flows_from_into, 
-        flow.from_id, 
-        flow.into_id, 
-        flow
-      ) && 
-      create_flow(
-        state.flows_into_from, 
-        flow.into_id, 
-        flow.from_id, 
-        flow
-      )
-    ) {
-      dispatch(ActionTypes.PUBLISH_FLOW_CREATION, msg)
-    } else {
+    if(undefined == get_flow(state, flow.from_id, flow.into_id)) {
       dispatch(ActionTypes.UI_ERROR_RAISED, 'could not create a new flow, because a flow already exists') 
+    } else {
+      set_flow(state, flow) 
+      dispatch(ActionTypes.PUBLISH_FLOW_CREATION, msg)
     }
   }, 
   [ActionTypes.PUBLISH_FLOW_CREATION]({}, _payload: Messages.FlowCreation) {
@@ -288,7 +293,6 @@ export const actions: ActionTree<State, State> = {
             from: state.connectFrom, 
             into: node
           });
-          commit(MutationTypes.DESELECT_NODE)
           dispatch(ActionTypes.UI_ERROR_RAISED, `Can't connect project to itself`) 
         } 
         commit(MutationTypes.STOP_CONNECTING)

@@ -37,8 +37,6 @@ export default defineComponent({
 @import '~@/global.less'; 
 
 .search-bar{
-  color: @foreground; 
-  text-align: center;
   input{
     font-size: 1.3rem; 
   }
