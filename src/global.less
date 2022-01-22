@@ -1,0 +1,29 @@
+@background: #613339;  
+@foreground: #dfefff;
+
+button {
+  box-sizing: border-box; 
+  border: none; 
+  color: @background; 
+  background-color: shade(@foreground, 20%); 
+  font-size: 1rem;
+  padding: 1rem; 
+  border-radius: 1em; 
+  cursor: pointer; 
+}
+
+input, textarea {
+  color: @foreground; 
+  box-sizing: border-box;
+  width: 100%;
+  background-color: shade(@background, 20%);
+  border: none; 
+  border-radius: 0.5em;
+  padding: 0.5rem; 
+  &:focus{
+    outline: 0.2rem solid shade(@foreground, 20%); 
+  }
+  &::placeholder {
+    color: shade(@foreground, 50%);
+  }
+}
