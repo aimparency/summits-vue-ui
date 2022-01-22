@@ -20,6 +20,7 @@ export enum ActionTypes {
   PUBLISH_FLOW_CREATION = 'PUBLISH_FLOW_CREATION', 
   UI_ERROR_RAISED = 'UI_ERROR_RAISED', 
   NODE_CLICK = 'NODE_CLICK', 
+  FLOW_CLICK = 'FLOW_CLICK', 
   NOWHERE_CLICK = 'NOWHERE_CLICK', 
   REMOVE_NODE = 'REMOVE_NODE', 
 }
@@ -185,6 +186,10 @@ export const actions: ActionTree<State, State> = {
       subLevel: 2, 
     }; 
 
+    state.selectedNode = node;
+
+    state.menu.open = true; 
+
     let msg: Messages.NodeCreation = {
       id: node.id, 
       title: node.title, 
@@ -239,33 +244,57 @@ export const actions: ActionTree<State, State> = {
     // TODO
   }, 
   [ActionTypes.NODE_CLICK]({state, commit, dispatch}, node: Node) {
-    if(state.connectFrom !== undefined) {
-      if(node !== state.connectFrom) {
-        dispatch(ActionTypes.CREATE_NEW_FLOW, {
-          from: state.connectFrom, 
-          into: node
-        });
-        commit(MutationTypes.DESELECT_NODE)
-      } 
-      commit(MutationTypes.STOP_CONNECTING)
+    if(state.map.panning) {
+      commit(MutationTypes.STOP_PANNING)
     } else {
-      if(state.selectedNode === node) {
-        commit(MutationTypes.DESELECT_NODE)
+      if(state.connectFrom !== undefined) {
+        if(node !== state.connectFrom) {
+          dispatch(ActionTypes.CREATE_NEW_FLOW, {
+            from: state.connectFrom, 
+            into: node
+          });
+          commit(MutationTypes.DESELECT_NODE)
+          dispatch(ActionTypes.UI_ERROR_RAISED, `Can't connect project to itself`) 
+        } 
+        commit(MutationTypes.STOP_CONNECTING)
       } else {
-        commit(MutationTypes.SELECT_NODE, node)
+        if(state.selectedNode === node) {
+          commit(MutationTypes.OPEN_MENU)
+        } else {
+          if(state.selectedFlow) {
+            commit(MutationTypes.DESELECT_FLOW) 
+          }
+          commit(MutationTypes.SELECT_NODE, node)
+        }
+      }
+    }
+  }, 
+  [ActionTypes.FLOW_CLICK]({state, commit}, flow: Flow) {
+    if(state.selectedFlow == flow) {
+      commit(MutationTypes.OPEN_MENU)
+    } else {
+      commit(MutationTypes.SELECT_FLOW, flow)
+      if(state.selectedNode !== undefined) {
+        commit(MutationTypes.DESELECT_NODE) 
       }
     }
   }, 
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {
-    if(state.connectFrom !== undefined) {
-      commit(MutationTypes.STOP_CONNECTING); 
-    } else if(state.selectedNode !== undefined) {
-      commit(MutationTypes.DESELECT_NODE); 
+    if(state.map.panning) {
+      commit(MutationTypes.STOP_PANNING)
     } else {
-      dispatch(ActionTypes.CREATE_NEW_NODE, {
-        x: state.map.mouse.x, 
-        y: state.map.mouse.y
-      }) 
+      if(state.connectFrom !== undefined) {
+        commit(MutationTypes.STOP_CONNECTING); 
+      } else if(state.selectedNode !== undefined) {
+        commit(MutationTypes.DESELECT_NODE); 
+      } else if(state.selectedFlow !== undefined) {
+        commit(MutationTypes.DESELECT_FLOW); 
+      } else {
+        dispatch(ActionTypes.CREATE_NEW_NODE, {
+          x: state.map.mouse.x, 
+          y: state.map.mouse.y
+        }) 
+      }
     }
   }, 
   [ActionTypes.REMOVE_NODE]({state, commit}, node: Node) {
@@ -276,5 +305,5 @@ export const actions: ActionTree<State, State> = {
       commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: node.id})
     }
     commit(MutationTypes.REMOVE_NODE, node.id)
-  }
+  }, 
 }

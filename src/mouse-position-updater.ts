@@ -1,12 +1,10 @@
-import { MutationTypes } from './mutations'; 
+import { mutations, MutationTypes } from './mutations'; 
 import { ActionTypes } from './actions'; 
 import { Store } from 'vuex';
 import State from './state';
 import { Vector2 } from 'three';
 
 export default function createMousePositionUpdater() {
-  let justPanned = false; 
-
   return (store: Store<State>) => {
 
     const pageToSVGCoords = (x: number, y: number) : Vector2 => {
@@ -54,7 +52,7 @@ export default function createMousePositionUpdater() {
         const dx = pb.page.x - x
         const dy = pb.page.y - y
         if(dx * dx + dy * dy > 5 * 5) {
-          justPanned = true;
+          store.commit(MutationTypes.ACTIVATE_PANNING)
           const halfSide = Math.min(
             window.innerWidth, 
             window.innerHeight
@@ -83,15 +81,11 @@ export default function createMousePositionUpdater() {
       endPan(e.pageX, e.pageY); 
     })
     window.addEventListener("click", (e: MouseEvent) => {
-      if(justPanned) {
-        justPanned = false; 
-      } else {
-        store.commit(
-          MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
-          pageToSVGCoords(e.pageX, e.pageY)
-        )
-        store.dispatch(ActionTypes.NOWHERE_CLICK)
-      }
+      store.commit(
+        MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
+        pageToSVGCoords(e.pageX, e.pageY)
+      )
+      store.dispatch(ActionTypes.NOWHERE_CLICK)
     })
   }
 }

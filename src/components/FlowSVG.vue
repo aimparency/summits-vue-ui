@@ -1,7 +1,9 @@
 <template>
   <path class="flow"
+    :class="{selected}" 
     :fill="fillColor"
     :d="path"
+    @click.stop="select"
   />
 </template>
 
@@ -10,6 +12,8 @@
 import { defineComponent, PropType } from 'vue';
 
 import { Flow } from '@/types';
+
+import { ActionTypes } from '@/actions';
 
 import makeCircularPath from '@/tools/make-circular-path';
 
@@ -22,8 +26,17 @@ export default defineComponent({
     }
   }, 
   computed: {
+    selected() : boolean {
+      return this.flow === this.$store.state.selectedFlow;
+    }, 
     fillColor() : string {
-      return this.$store.getters.nodeColor(this.flow.from_id)
+      const selectedNode = this.$store.state.selectedNode;
+      console.log("recalculating flow color") 
+      if ( selectedNode && selectedNode.id == this.flow.from_id ) {
+        return '#ccc'; 
+      } else {
+        return this.$store.getters.nodeColor(this.flow.from_id); 
+      }
     }, 
     path() : string {
       const from = this.$store.state.nodes[this.flow.from_id]
@@ -34,17 +47,13 @@ export default defineComponent({
         {x: into.x, y: into.y, r: into.r}
       ) 
     }, 
-    simplePath() : string {
-      const from = this.$store.state.nodes[this.flow.from_id]
-      const into = this.$store.state.nodes[this.flow.into_id]
-      return `M ${from.x} ${from.y} L ${into.x} ${into.y}`
-    }
   },
   beforeMount() {
     console.log("before mounting flow svg") 
   }, 
   methods: {
     select() {
+      this.$store.dispatch(ActionTypes.FLOW_CLICK, this.flow)
     }
   }
 });
@@ -54,9 +63,9 @@ export default defineComponent({
 <style scoped lang="less">
 .flow {
   stroke: none;
-  &.update-pending {
-    stroke: #999; 
-    stroke-width: 100;
+  &.selected {
+    fill: #ccc; 
   }
+  cursor: pointer; 
 }
 </style>

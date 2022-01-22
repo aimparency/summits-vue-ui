@@ -14,15 +14,14 @@
         v-if="!placeholder" 
         class="label"
         x="0"
-        y="-0.25">
-        {{ node.subLevel }}
-      </text>
-      <text
-        v-if="!placeholder" 
-        class="label"
-        x="0"
         y="0">
-        {{ node.updatePending ? 'pending..' : node.title }}
+        <!--{{ node.subLevel }}-->
+        <tspan 
+          x="0"
+          :dy="i == 0 ? (-0.3 * (titleLines.length - 1) / 2) : 0.3 "
+          :textLength="line.length * 0.61 + 'em'"
+          v-for="line, i in titleLines" 
+          :key="i"> {{ line }} </tspan>
       </text>
       <NodeTools
         v-if="showTools"
@@ -42,6 +41,16 @@ import { MutationTypes } from '@/mutations';
 
 import NodeTools from './NodeTools.vue'
 
+const lineLengths = [
+  [12], 
+  [12, 12], 
+  [11, 12, 11], 
+  [9, 12, 12, 9], 
+  [8, 11, 12, 11, 8], 
+]
+
+const totalCharacters = lineLengths.map(lines => lines.reduce((prev, curr) => prev + curr)); 
+
 
 export default defineComponent({
   name: 'NodeSVG',
@@ -55,6 +64,21 @@ export default defineComponent({
     }
   }, 
   computed: {
+    titleLines() : string[] {
+      let length = this.node.title.length; 
+      let lines: string[] = []; 
+      let offset = 0; 
+      for(let i = 0; i < totalCharacters.length; i++) {
+        if(length <= totalCharacters[i] || i == totalCharacters.length - 1) {
+          for(let lineLength of lineLengths[i]){
+            lines.push(this.node.title.substring(offset, offset + lineLength))
+            offset += lineLength
+          }
+          break
+        }
+      }
+      return lines
+    }, 
     selected() : boolean {
       return this.$store.state.selectedNode == this.node; 
     }, 

@@ -21,7 +21,11 @@ const store = createStore({
         mouse: new Vector2(0,0), 
         offset: new Vector2(0,0),
         scale: 0.1, 
-        panBeginning: undefined
+        panBeginning: undefined, 
+        panning: false
+      }, 
+      menu: {
+        open: true
       }
     }
   }, 

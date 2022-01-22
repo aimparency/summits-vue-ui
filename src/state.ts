@@ -11,6 +11,7 @@ export default interface State {
    * a certain radius in path length of nodes around anchor nodes will be subscribed to. 
    */
   selectedNode?: Node, 
+  selectedFlow?: Flow, 
   connectFrom?: Node, 
   map: {
     mouse: Vector2,    /** Offset is in map coordinates. 
@@ -25,6 +26,10 @@ export default interface State {
     panBeginning: undefined | {
       offset: Vector2, 
       page: Vector2
-    }
+    }, 
+    panning: boolean
+  }, 
+  menu: {
+    open: boolean
   }
 }
