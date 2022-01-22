@@ -14,12 +14,19 @@ import { defineComponent } from 'vue';
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
 
+interface Result {
+}
+
 export default defineComponent({
   name: 'SearchBar',
   components: {
     SideMenuHeader,
     SideMenuContent
   },
+  computed: {
+    results() : (Result[] | void ) {
+    }
+  }, 
   props: {
   }, 
 });
