@@ -15,7 +15,6 @@ export default function createAggregatorLink () {
       } else if("SevenSummits" in msg) {
         store.dispatch(ActionTypes.INIT, msg.SevenSummits as Messages.Init); 
       } else if("NodeRemoval" in msg) {
-        console.log("received a node removal from aggregator") 
         const nodeRemoval = msg.NodeRemoval as Messages.NodeRemoval; 
         store.dispatch(ActionTypes.REMOVE_NODE, nodeRemoval.node_id); 
       }

@@ -94,7 +94,6 @@ export default defineComponent({
     updateNotes(e: Event) {
       const target = <HTMLTextAreaElement>e.target
       target.style.height = target.scrollHeight + 'px'
-      console.log(target.scrollHeight) 
 
       this.$store.commit(MutationTypes.UPDATE_NODE_TITLE, {
         node: this.node, 

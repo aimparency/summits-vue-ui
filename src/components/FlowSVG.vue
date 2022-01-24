@@ -27,21 +27,11 @@ export default defineComponent({
   }, 
   computed: {
     selected() : boolean {
-      console.log(
-        JSON.stringify(this.flow), 
-      );
-      console.log(
-        JSON.stringify(this.$store.state.selectedFlow)
-      );
-      console.log(this.flow) 
-      console.log(this.$store.state.selectedFlow) 
-      let identical = this.flow == this.$store.state.selectedFlow;
-      console.log("identical?", identical)
-      return identical 
+      return this.flow == this.$store.state.selectedFlow;
+
     }, 
     fillColor() : string {
       const selectedNode = this.$store.state.selectedNode;
-      console.log("recalculating flow color") 
       if ( selectedNode && selectedNode.id == this.flow.from_id ) {
         return '#ccc'; 
       } else {
@@ -58,9 +48,6 @@ export default defineComponent({
       ) 
     }, 
   },
-  beforeMount() {
-    console.log("before mounting flow svg") 
-  }, 
   methods: {
     select() {
       this.$store.dispatch(ActionTypes.FLOW_CLICK, this.flow)

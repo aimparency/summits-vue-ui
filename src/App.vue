@@ -20,9 +20,6 @@ export default defineComponent({
       socket?: WebSocket
     }
   }, 
-  beforeMount() {
-    console.log('connecting to aggregator') 
-  }, 
   methods: {
   }
 });

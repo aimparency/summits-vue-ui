@@ -254,7 +254,6 @@ export const actions: ActionTree<State, State> = {
     // this action 
   }, 
   [ActionTypes.CREATE_NEW_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
-    console.log("creating flow") 
     let flow: Flow = {
       from_id: payload.from.id, 
       into_id: payload.into.id, 
@@ -340,7 +339,6 @@ export const actions: ActionTree<State, State> = {
     dispatch(ActionTypes.REMOVE_NODE, nodeId)
   }, 
   [ActionTypes.REMOVE_NODE]({state, commit}, nodeId: string) {
-    console.log("removing node") 
     for(let intoId in state.flows_from_into[nodeId]) {
       commit(MutationTypes.REMOVE_FLOW, {from: nodeId, into: intoId})
     }

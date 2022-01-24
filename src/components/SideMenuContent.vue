@@ -26,7 +26,6 @@ export default defineComponent({
   }, 
   methods: {
     scroll(e: WheelEvent) {
-      console.log('scroll', e) 
       this.scrollY = Math.min(
         Math.max(0, this.scrollY + e.deltaY), 
       )
