@@ -270,7 +270,7 @@ export const actions: ActionTree<State, State> = {
       share: flow.share
     }
 
-    if(undefined == get_flow(state, flow.from_id, flow.into_id)) {
+    if(undefined !== get_flow(state, flow.from_id, flow.into_id)) {
       dispatch(ActionTypes.UI_ERROR_RAISED, 'could not create a new flow, because a flow already exists') 
     } else {
       set_flow(state, flow) 

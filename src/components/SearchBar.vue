@@ -38,6 +38,8 @@ export default defineComponent({
 
 .search-bar{
   input{
+    width: calc(100% - 0.5rem);
+    margin: 0.25rem; 
     font-size: 1.3rem; 
   }
 }
