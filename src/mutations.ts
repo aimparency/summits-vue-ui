@@ -1,7 +1,7 @@
 import State from './state' 
 import { MutationTree } from 'vuex'
 
-import { Node, Flow } from './types'
+import { Node, Flow, NearState } from './types'
 import { Vector2 } from 'three'
 
 export enum MutationTypes {
@@ -28,7 +28,9 @@ export enum MutationTypes {
   
   STOP_PANNING = 'STOP_PANNING', 
 
-  TOGGLE_MENU = 'TOGGLE_MENU'
+  TOGGLE_MENU = 'TOGGLE_MENU', 
+
+  SET_NEAR_STATE = 'SET_NEAR_STATE', 
 }
 
 export const mutations: MutationTree<State> = {
@@ -85,5 +87,8 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.TOGGLE_MENU](state) {
     state.menu.open = !state.menu.open
+  }, 
+  [MutationTypes.SET_NEAR_STATE](state, newNearState: NearState) {
+    state.nearState = newNearState
   }
 }

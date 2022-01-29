@@ -1,14 +1,15 @@
-import { createApp } from 'vue'
+import { createApp } from 'vue';
 import { createStore, Store } from 'vuex'; 
 
-import App from './App.vue'
-import State from './state'
-import { mutations } from './mutations'
-import { actions } from './actions'
-import { getters } from './getters'
+import App from './App.vue';
+import State from './state';
+import { mutations } from './mutations'; 
+import { actions } from './actions';
+import { getters } from './getters'; 
 
-import createAggregatorLink from './aggregator-link'
+import createAggregatorLink from './aggregator-link'; 
 import createMousePositionUpdater from './mouse-position-updater';
+import createNearLink from './near-link'; 
 import { Vector2 } from 'three';
 
 const store = createStore({
@@ -26,7 +27,8 @@ const store = createStore({
       }, 
       menu: {
         open: true
-      }
+      }, 
+      nearState: 'disconnected'
     }
   }, 
   mutations,
@@ -34,7 +36,8 @@ const store = createStore({
   getters, 
   plugins: [
     createMousePositionUpdater(),
-    createAggregatorLink()
+    createAggregatorLink(), 
+    createNearLink()
   ]
 }) 
 

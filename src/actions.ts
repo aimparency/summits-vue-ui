@@ -18,7 +18,7 @@ export enum ActionTypes {
   PUBLISH_NODE_CREATION = 'PUBLISH_NODE_CREATION',
   CREATE_NEW_FLOW = 'CREATE_NEW_FLOW', 
   PUBLISH_FLOW_CREATION = 'PUBLISH_FLOW_CREATION', 
-  UI_ERROR_RAISED = 'UI_ERROR_RAISED', 
+  UI_ERROR = 'UI_ERROR', 
   NODE_CLICK = 'NODE_CLICK', 
   FLOW_CLICK = 'FLOW_CLICK', 
   NOWHERE_CLICK = 'NOWHERE_CLICK', 
@@ -270,7 +270,7 @@ export const actions: ActionTree<State, State> = {
     }
 
     if(undefined !== get_flow(state, flow.from_id, flow.into_id)) {
-      dispatch(ActionTypes.UI_ERROR_RAISED, 'could not create a new flow, because a flow already exists') 
+      dispatch(ActionTypes.UI_ERROR, 'could not create a new flow, because a flow already exists') 
     } else {
       set_flow(state, flow) 
       dispatch(ActionTypes.PUBLISH_FLOW_CREATION, msg)
@@ -279,7 +279,7 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.PUBLISH_FLOW_CREATION]({}, _payload: Messages.FlowCreation) {
     // only dispatched for aggregator plugin
   }, 
-  [ActionTypes.UI_ERROR_RAISED]({}, _errorMessage: string) {
+  [ActionTypes.UI_ERROR]({}, _errorMessage: string) {
     // TODO
   }, 
   [ActionTypes.NODE_CLICK]({state, commit, dispatch}, node: Node) {
@@ -292,7 +292,7 @@ export const actions: ActionTree<State, State> = {
             from: state.connectFrom, 
             into: node
           });
-          dispatch(ActionTypes.UI_ERROR_RAISED, `Can't connect project to itself`) 
+          dispatch(ActionTypes.UI_ERROR, `Can't connect project to itself`) 
         } 
         commit(MutationTypes.STOP_CONNECTING)
       } else {

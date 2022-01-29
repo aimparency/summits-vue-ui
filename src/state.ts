@@ -31,5 +31,6 @@ export default interface State {
   }, 
   menu: {
     open: boolean
-  }
+  }, 
+  nearState: NearState
 }

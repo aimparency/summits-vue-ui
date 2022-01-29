@@ -28,3 +28,5 @@ export interface Flow {
   // local
   updatePending: boolean 
 }
+
+export type NearState = 'disconnected' | 'connecting' | 'connected' 
