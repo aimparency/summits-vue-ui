@@ -5,6 +5,8 @@
 yarn install
 ```
 
+specify the contract account id in `./.env`.
+
 ### Compiles and hot-reloads for development
 ```
 yarn serve
@@ -22,3 +24,4 @@ yarn test:unit
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
