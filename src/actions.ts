@@ -215,8 +215,8 @@ export const actions: ActionTree<State, State> = {
       })
     }
   }, 
-  [ActionTypes.INIT]({state, dispatch}, payload: Messages.Init) {
-    for(let nodeId of payload.node_ids) {
+  [ActionTypes.INIT]({state, dispatch}, nodeIds: string[]) {
+    for(let nodeId of nodeIds) {
       state.nodes[nodeId] = {
         ...createDefaultNode(), 
         id: nodeId, 
@@ -242,15 +242,16 @@ export const actions: ActionTree<State, State> = {
 
     state.selectedNode = node;
 
-    let msg: Messages.NodeCreation = {
+    let msg: Messages.NodeCreationWithValue = {
       id: node.id, 
       title: node.title, 
-      notes: node.notes
+      notes: node.notes, 
+      deposit: 1
     };
 
     dispatch(ActionTypes.PUBLISH_NODE_CREATION, msg) 
   }, 
-  [ActionTypes.PUBLISH_NODE_CREATION]({}, _payload: Messages.NodeCreation) {
+  [ActionTypes.PUBLISH_NODE_CREATION]({}, _payload: Messages.NodeCreationWithValue) {
     // this action 
   }, 
   [ActionTypes.CREATE_NEW_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
@@ -262,11 +263,16 @@ export const actions: ActionTree<State, State> = {
       notes: ""
     };
 
+
     let msg: Messages.FlowCreation = {
-      from_id: flow.from_id, 
-      into_id: flow.into_id, 
+      key: {
+        from_id: flow.from_id, 
+        into_id: flow.into_id, 
+      }, 
       notes: flow.notes, 
-      share: flow.share
+      share: flow.share, 
+      dx: (payload.into.x - payload.from.x) / payload.from.r, 
+      dy: (payload.into.y - payload.from.y) / payload.from.r
     }
 
     if(undefined !== get_flow(state, flow.from_id, flow.into_id)) {

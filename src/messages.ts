@@ -23,10 +23,11 @@ export interface Init {
 }
 
 // outgoing messages
-export interface NodeCreation {
+export interface NodeCreationWithValue {
   id: string, 
   title: string, 
-  notes: string
+  notes: string, 
+  deposit: number
 }
 
 export interface FlowCreation {
@@ -40,15 +41,6 @@ export interface FlowCreation {
   share: number
 }
 
-export interface NodeSubscription {
-  node_id: string
-}
-
-export interface NodeDesubscription {
-  node_id: string
-}
-
-// both directions
 export interface NodeRemoval {
   node_id: string 
 }
