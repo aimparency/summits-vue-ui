@@ -1,4 +1,5 @@
 import { 
+  Near, 
   keyStores, 
   connect, 
   WalletConnection, 
@@ -11,15 +12,16 @@ import nearConfig from './near-config';
 import { ActionTypes } from './actions'; 
 import { MutationTypes } from './mutations'; 
 
-const CONTRACT_NAME = "summits"
-
 export default function createNearLink () {
 
   return (store: Store<State>) => {
 
-    let contract: undefined | any;
-
-    store.commit(MutationTypes.SET_NEAR_STATE, 'connecting') 
+    const contractAccountId = process.env.CONTRACT_ACCOUNT_ID
+    if(contractAccountId == undefined) {
+      console.error("no contract account specified in .env on build") 
+      store.commit(MutationTypes.SET_NEAR_STATE, 'error')
+    } else {
+      store.commit(MutationTypes.SET_NEAR_STATE, 'connecting') 
 
     connect({
       ...nearConfig, 
@@ -27,84 +29,76 @@ export default function createNearLink () {
         keyStore: new keyStores.BrowserLocalStorageKeyStore()
       }
     }).then(
-      near => {
-        store.commit(MutationTypes.SET_NEAR_STATE, 'connected') 
-
-        const wallet = new WalletConnection(near, null);
-
-        if(!wallet.getAccountId()) {
-          wallet.requestSignIn(
-            "dev-1643436574128-49572366335961"
-          )
-        }
-
-        const account = wallet.account()
-
-        const contract = new Contract(account, CONTRACT_NAME, {
-          viewMethods: ['get_status'], 
-          changeMethods: ['add_node'], 
-        });
-
-        console.log("contract is", contract)
-      }, 
+      near => onConnection(near, store, contractAccountId),
       err => {
+        store.commit(MutationTypes.SET_NEAR_STATE, 'error')
         store.dispatch(ActionTypes.UI_ERROR, "could not establish near connection: " + err)
       }
     )
 
-    // basically replace what is currently sent to the aggregator: 
-    //
-    // when a node is created => send node creation
-    // when a node is changes => send node change 
-    // when a node is removed => send node removal 
-    //
-    // when a flow is created => send flow creation
-    // when a flow is changes => send a flow change
-    // when a flow is removed => send flow removal
-    
-    const hasConnection = () : boolean => {
-      if ( contract !== undefined ) {
-        // more checks? 
-        return true
-      }
-      return false
-    }
+    // initially: load seven summits
 
-    store.subscribeAction(async action => {
-      if (action.type === ActionTypes.PUBLISH_NODE_CREATION) {
-        if(hasConnection()) {
-          contract.add_node(
-            action.payload
-          ).then((result: any) => {
-            console.log("result of subscribe action", result)
-          }) 
-        }
-      } 
-     // else if (action.type === ActionTypes.PUBLISH_FLOW_CREATION) {
-     //   socket.send(JSON.stringify({
-     //     FlowCreation: action.payload
-     //   })); 
-     // } else if(action.type === ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED) {
-     //   const nodeRemoval = {
-     //     node_id: action.payload
-     //   }
-     //   socket.send(JSON.stringify({
-     //     NodeRemoval: nodeRemoval
-     //   })); 
-     // }
-    }); 
-
+  // NEAR contract call example
   // example change method call
-  //await contract.method_name(
+  // await contract.method_name(
   //  {
   //    arg_name: "value", // argument name and value - pass empty object if no args required
   //  },
   //  300000000000000, // attached GAS (optional)
   //  1000000000000000000000000 // attached deposit in yoctoNEAR (optional)
-  //);    
+  // );    
   
   // examplel view method call
   // const response = await contract.view_method_name({ arg_name: "arg_value" });
     
-  }
 }
+
+function onConnection(near: Near, store: Store<State>, contractAccountId: string) {
+  const wallet = new WalletConnection(near, null);
+
+  if(!wallet.getAccountId()) {
+    wallet.requestSignIn(
+      contractAccountId 
+    )
+  }
+
+  const account = wallet.account()
+
+  const contract = new Contract(account, contractAccountId, {
+    viewMethods: ['get_seven_summits'], 
+    changeMethods: ['add_node'], 
+  }) as any;
+
+  store.commit(MutationTypes.SET_NEAR_STATE, 'connected') 
+
+  contract.get_seven_summits().then(
+    (result: any) => console.log("seven summits result", result), 
+    (err: any) => console.log("seven summits error", err)
+  )
+
+  store.subscribeAction(action => {
+    if(action.type === ActionTypes.LOAD_NODE) {
+      // get_node
+      contract.get_node(
+        action.payload
+      )
+    } else if (action.type === ActionTypes.PUBLISH_NODE_CREATION) {
+      // create_node_with_value
+      contract.create_node_with_value(
+        action.payload
+      ).then((result: any) => {
+        console.log("result of subscribe call", result)
+      }) 
+    } else if (action.type === ActionTypes.PUBLISH_FLOW_CREATION) {
+      contract.create_flow(
+        action.payload
+      ).then((result: any) => {
+        console.log("result of create flow call"
+      // create_flow
+    } else if(action.type === ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED) {
+      // remove_node
+    }
+    // update flow
+    // update_node
+  }); 
+}, 

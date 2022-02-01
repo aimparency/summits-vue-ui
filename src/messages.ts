@@ -30,8 +30,12 @@ export interface NodeCreation {
 }
 
 export interface FlowCreation {
-  from_id: string,
-  into_id: string, 
+  key: {
+    from_id: string,
+    into_id: string, 
+  }, 
+  dx: number, 
+  dy: number, 
   notes: string, 
   share: number
 }

@@ -8,8 +8,8 @@ import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
 
 export enum ActionTypes {
-  SUBSCRIBE_TO_NODE = 'SUBSCRIBE_TO_NODE',
-  SUBSCRIBE_TO_NEIGHBOR_NODE = 'SUBSCRIBE_TO_NEIGHBOR_NODE',
+  LOAD_NODE = 'LOAD_NODE',
+  LOAD_NEIGHBOR_NODE = 'LOAD_NEIGHBOR_NODE',
   UPDATE_NODE = 'UPDATE_NODE',
   UPDATE_FLOW = 'UPDATE_FLOW',
   INIT = 'INIT', 
@@ -109,7 +109,7 @@ function set_flow_in_double_dict(state: State, flow: Flow) {
 // but maybe typing already works perfectly. 
 
 export const actions: ActionTree<State, State> = {
-  [ActionTypes.SUBSCRIBE_TO_NODE]({}, _nodeId: string) {
+  [ActionTypes.LOAD_NODE]({}, _nodeId: string) {
     // the aggregatorLink subscribes to this action
   }, 
   [ActionTypes.UPDATE_NODE]({state}, nodeUpdate: Messages.NodeUpdate) {
@@ -120,7 +120,7 @@ export const actions: ActionTree<State, State> = {
       })
     } 
   }, 
-  [ActionTypes.SUBSCRIBE_TO_NEIGHBOR_NODE](
+  [ActionTypes.LOAD_NEIGHBOR_NODE](
     {state, dispatch}, 
     payload: {knownNodeId: string, newNodeId: string}
   ) {
@@ -132,7 +132,7 @@ export const actions: ActionTree<State, State> = {
         updatePending: true, 
         subLevel: knownNode.subLevel - 1
       }
-      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, payload.newNodeId)
+      dispatch(ActionTypes.LOAD_NODE, payload.newNodeId)
     } else if (knownNode.subLevel === 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
@@ -147,7 +147,7 @@ export const actions: ActionTree<State, State> = {
     if(!(flowUpdate.from_id in state.nodes)) {
       if(flowUpdate.into_id in state.nodes) {
         ignoreUpdate = false
-        dispatch(ActionTypes.SUBSCRIBE_TO_NEIGHBOR_NODE, {
+        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
           knownNodeId: flowUpdate.into_id, 
           newNodeId: flowUpdate.from_id
         })
@@ -155,7 +155,7 @@ export const actions: ActionTree<State, State> = {
     } else {
       ignoreUpdate = false
       if(!(flowUpdate.into_id in state.nodes)) {
-        dispatch(ActionTypes.SUBSCRIBE_TO_NEIGHBOR_NODE, {
+        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
           knownNodeId: flowUpdate.from_id, 
           newNodeId: flowUpdate.into_id
         }) 
@@ -198,7 +198,7 @@ export const actions: ActionTree<State, State> = {
     }
     if(raiseNode) {
       if(raiseNode.subLevel == -1) {
-        dispatch(ActionTypes.SUBSCRIBE_TO_NODE, raiseNode.id) 
+        dispatch(ActionTypes.LOAD_NODE, raiseNode.id) 
       }
       raiseNode.subLevel = newLevel
       dispatch(ActionTypes.SPILL_SUB_LEVEL, raiseNode.id)
@@ -223,13 +223,13 @@ export const actions: ActionTree<State, State> = {
         updatePending: true, 
         subLevel: 2
       }
-      dispatch(ActionTypes.SUBSCRIBE_TO_NODE, nodeId)
+      dispatch(ActionTypes.LOAD_NODE, nodeId)
     }
   }, 
   [ActionTypes.CREATE_NEW_NODE]({state, dispatch}, payload: {x: number, y: number}) {
     let nodeId = uuid(); 
 
-    dispatch(ActionTypes.SUBSCRIBE_TO_NODE, nodeId);
+    dispatch(ActionTypes.LOAD_NODE, nodeId);
 
     const node = state.nodes[nodeId] = {
       ...createDefaultNode(), 
