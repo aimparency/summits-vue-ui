@@ -14,8 +14,10 @@ export enum ActionTypes {
   UPDATE_FLOW = 'UPDATE_FLOW',
   INIT = 'INIT', 
   UPDATE_OR_CREATE_FLOW = 'UPDATE_OR_CREATE_FLOW', 
+  ONCHAIN_CREATE_NEW_NODE = 'ONCHAIN_CREATE_NEW_NODE', 
   CREATE_NEW_NODE = 'CREATE_NEW_NODE', 
-  PUBLISH_NODE_CREATION = 'PUBLISH_NODE_CREATION',
+  ONCHAIN_CHANGE_NODE = 'ONCHAIN_CHANGE_NODE', 
+  COMMIT_NODE_CHANGES = 'COMMIT_NODE_CHANGES',
   CREATE_NEW_FLOW = 'CREATE_NEW_FLOW', 
   PUBLISH_FLOW_CREATION = 'PUBLISH_FLOW_CREATION', 
   UI_ERROR = 'UI_ERROR', 
@@ -23,9 +25,11 @@ export enum ActionTypes {
   FLOW_CLICK = 'FLOW_CLICK', 
   NOWHERE_CLICK = 'NOWHERE_CLICK', 
   REMOVE_NODE = 'REMOVE_NODE', 
-  REMOVE_NODE_LOCALLY_TRIGGERED = 'REMOVE_NODE_LOCALLY_TRIGGERED', 
+  COMMIT_NODE_REMOVAL = 'COMMIT_NODE_REMOVAL', 
   COMPARE_AND_RAISE = 'COMPARE_AND_RAISE', 
   SPILL_SUB_LEVEL = 'SPILL_SUB_LEVEL',
+  REQUEST_NEAR_SIGN_IN = 'REQUEST_NEAR_SIGN_IN', 
+  SET_NODE_DATA = 'SET_NODE_DATA', 
 }
 
 function createDefaultNode() {
@@ -35,13 +39,19 @@ function createDefaultNode() {
     r: Math.random() * 0.5 + 0.5, 
     title: "", 
     notes: "", 
+    unpublished: false, 
+    changes: {
+    }, 
+    deposit: 1
   }
 }
 
 function createDefaultFlow() {
   return {
     notes: "", 
-    share: Math.random() * 0.25 + 0.01
+    share: Math.random() * 0.25 + 0.01, 
+    changes: {}, 
+    unpublished: false
   }
 }
 
@@ -99,10 +109,6 @@ function set_flow_in_dict(
   }
   return dict[i1][i2] = flow
 }
-
-function set_flow_in_double_dict(state: State, flow: Flow) {
-}
-
 
 // maybe make a interface Actions with all the types only... To make typing be precise
 // check here: https://dev.to/3vilarthas/vuex-typescript-m4j
@@ -176,7 +182,7 @@ export const actions: ActionTree<State, State> = {
       flow = {
         ...createDefaultFlow(), 
         ...flowUpdate, 
-        updatePending: false
+        updatePending: false, 
       }
     } else {
       Object.assign(flow, {
@@ -226,33 +232,59 @@ export const actions: ActionTree<State, State> = {
       dispatch(ActionTypes.LOAD_NODE, nodeId)
     }
   }, 
-  [ActionTypes.CREATE_NEW_NODE]({state, dispatch}, payload: {x: number, y: number}) {
+  [ActionTypes.ONCHAIN_CHANGE_NODE]({}, _payload: {x: number, y: number}) {
+    //subscribed to by near-link
+  }, 
+  [ActionTypes.ONCHAIN_CREATE_NEW_NODE]({}, _payload: {
+    id: string, 
+    title: string, 
+    notes: string, 
+    deposit: number,
+  }) {
+    //subscribed to by near-link
+  }, 
+  [ActionTypes.CREATE_NEW_NODE]({state, commit, dispatch}, payload: {x: number, y: number}) {
     let nodeId = uuid(); 
-
-    dispatch(ActionTypes.LOAD_NODE, nodeId);
 
     const node = state.nodes[nodeId] = {
       ...createDefaultNode(), 
       id: nodeId, 
       x: payload.x, 
       y: payload.y, 
-      updatePending: true, 
+      updatePending: false, 
       subLevel: 2, 
+      unpublished: true
     }; 
 
-    state.selectedNode = node;
-
-    let msg: Messages.NodeCreationWithValue = {
-      id: node.id, 
-      title: node.title, 
-      notes: node.notes, 
-      deposit: 1
-    };
-
-    dispatch(ActionTypes.PUBLISH_NODE_CREATION, msg) 
+    commit(MutationTypes.SELECT_NODE, node)
   }, 
-  [ActionTypes.PUBLISH_NODE_CREATION]({}, _payload: Messages.NodeCreationWithValue) {
-    // this action 
+  [ActionTypes.COMMIT_NODE_CHANGES]({commit, dispatch}, node: Node) {
+    if(node.unpublished) {
+      dispatch(ActionTypes.ONCHAIN_CREATE_NEW_NODE, {
+        id: node.id, 
+        title: node.changes.title || node.title, 
+        notes: node.changes.notes || node.notes, 
+        deposit: node.changes.deposit || node.deposit
+      }) 
+    } else {
+      dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {
+        node_id: node.id,
+        unpublished: false, 
+        changes: {
+          ...node.changes
+        }
+      }) 
+    }
+    Object.assign(node, node.changes)
+    // this action is subscribed to by the near-link plugin
+  }, 
+  [ActionTypes.SET_NODE_DATA]({state}, nodeView: Messages.NodeView) {
+    Object.assign(state.nodes[nodeView.id], {
+      title: nodeView.title, 
+      notes: nodeView.notes, 
+      deposit: nodeView.deposit, 
+      updatePending: false
+    }) 
   }, 
   [ActionTypes.CREATE_NEW_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
     let flow: Flow = {
@@ -260,9 +292,10 @@ export const actions: ActionTree<State, State> = {
       into_id: payload.into.id, 
       updatePending: true, 
       share: Math.random() * 0.25 + 0.01, 
-      notes: ""
+      notes: "", 
+      changes: {}, 
+      unpublished: true, 
     };
-
 
     let msg: Messages.FlowCreation = {
       key: {
@@ -341,8 +374,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED]({dispatch}, nodeId: string) {
-    dispatch(ActionTypes.REMOVE_NODE, nodeId)
+  [ActionTypes.COMMIT_NODE_REMOVAL]({dispatch}, nodeId: string) {
   }, 
   [ActionTypes.REMOVE_NODE]({state, commit}, nodeId: string) {
     for(let intoId in state.flows_from_into[nodeId]) {
@@ -352,5 +384,6 @@ export const actions: ActionTree<State, State> = {
       commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: nodeId})
     }
     commit(MutationTypes.REMOVE_NODE, nodeId)
-  }
+  }, 
+  [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}
 }

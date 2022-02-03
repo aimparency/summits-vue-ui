@@ -43,10 +43,10 @@ import NodeTools from './NodeTools.vue'
 
 const lineLengths = [
   [12], 
-  [12, 12], 
-  [11, 12, 11], 
-  [9, 12, 12, 9], 
-  [8, 11, 12, 11, 8], 
+  [11, 11], 
+  [10, 12, 10], 
+  [9, 11, 11, 9], 
+  [8, 10, 12, 10, 8], 
 ]
 
 const totalCharacters = lineLengths.map(lines => lines.reduce((prev, curr) => prev + curr)); 
@@ -65,14 +65,16 @@ export default defineComponent({
   }, 
   computed: {
     titleLines() : string[] {
-      let length = this.node.title.length; 
+      let title = this.node.changes.title || this.node.title
+      let length = title.length; 
       let lines: string[] = []; 
       let offset = 0; 
       for(let i = 0; i < totalCharacters.length; i++) {
         if(length <= totalCharacters[i] || i == totalCharacters.length - 1) {
           for(let lineLength of lineLengths[i]){
-            lines.push(this.node.title.substring(offset, offset + lineLength))
-            offset += lineLength
+            let letters = title.substring(offset, offset + lineLength) 
+            lines.push(letters.trim())
+            offset += lineLength 
           }
           break
         }
@@ -103,7 +105,10 @@ export default defineComponent({
       this.$store.commit(MutationTypes.START_CONNECTING, this.node)
     }, 
     remove() {
-      this.$store.dispatch(ActionTypes.REMOVE_NODE_LOCALLY_TRIGGERED, this.node.id) 
+      this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
+      if(!this.node.unpublished) {
+        this.$store.dispatch(ActionTypes.COMMIT_NODE_REMOVAL, this.node.id) 
+      }
     }
   }
 });

@@ -5,8 +5,11 @@
     @click.stop=""
     @mousedown.stop=""
   >
+    <NearProfile
+      v-if="$store.state.menu.showProfile"
+      />
     <NodeDetails 
-      v-if="$store.state.selectedNode !== undefined" 
+      v-else-if="$store.state.selectedNode !== undefined" 
       :node="$store.state.selectedNode"/>
     <FlowDetails 
       v-else-if="$store.state.selectedFlow !== undefined"
@@ -21,6 +24,7 @@ import { defineComponent } from 'vue';
 import SearchBar from './SearchBar.vue';
 import NodeDetails from './NodeDetails.vue';
 import FlowDetails from './FlowDetails.vue';
+import NearProfile from './NearProfile.vue';
 
 type Orientation = 'full' | 'half';
 
@@ -29,7 +33,8 @@ export default defineComponent({
   components: {
     NodeDetails, 
     FlowDetails, 
-    SearchBar
+    SearchBar, 
+    NearProfile
   },
   data() {
     return {

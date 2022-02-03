@@ -54,7 +54,7 @@ export default defineComponent({
       const target = <HTMLTextAreaElement>e.target
       target.style.height = target.scrollHeight + 'px'
 
-      this.$store.commit(MutationTypes.UPDATE_NODE_TITLE, {
+      this.$store.commit(MutationTypes.CHANGE_FLOW_NOTES, {
         flow: this.flow, 
         notes: (<HTMLInputElement>e.target).value
       })

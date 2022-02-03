@@ -1,22 +1,26 @@
 export interface Node {
   id: string, 
-  // general 
   title: string, 
   notes: string, 
-  // flows_from: string[], 
-  // flows_into: string[], 
-  // local
   updatePending: boolean, 
+  deposit: number, 
   x: number, 
   y: number, 
   r: number, 
   /**
+   * @subLevel
    * seven summits: 2
    * explicit subscriptions (user selection): 2
    * lowest level for subscription: 0 
    * placeholder: -1
    */
-  subLevel: number 
+  subLevel: number, 
+  unpublished: boolean, 
+  changes: {
+    title?: string, 
+    notes?: string, 
+    deposit?: number
+  }
 }
 
 export interface Flow {
@@ -26,7 +30,11 @@ export interface Flow {
   share: number, 
   notes: string, 
   // local
-  updatePending: boolean 
+  updatePending: boolean, 
+  unpublished: boolean, 
+  changes: {
+    notes?: string
+  }, 
 }
 
-export type NearState = 'disconnected' | 'connecting' | 'connected' 
+export type NearState = 'disconnected' | 'connecting' | 'connected' | 'logging-in' | 'logged-in'

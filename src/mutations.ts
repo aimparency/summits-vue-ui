@@ -14,10 +14,12 @@ export enum MutationTypes {
   REMOVE_FLOW = 'REMOVE_FLOW', 
   REMOVE_NODE = 'REMOVE_NODE',
 
-  UPDATE_NODE_TITLE = 'UPDATE_NODE_TITLE', 
-  UPDATE_NODE_NOTES = 'UPDATE_NODE_NOTES', 
+  CHANGE_NODE_TITLE = 'CHANGE_NODE_TITLE', 
+  CHANGE_NODE_NOTES = 'CHANGE_NODE_NOTES', 
+  CHANGE_NODE_DEPOSIT = 'CHANGE_NODE_DEPOSIT', 
+  RESET_NODE_CHANGES = 'RESET_NODE_CHANGES', 
 
-  UPDATE_FLOW_NOTES = 'UPDATE_FLOW_NOTES', 
+  CHANGE_FLOW_NOTES = 'CHANGE_FLOW_NOTES', 
 
   OPEN_MENU = 'OPEN_MENU', 
 
@@ -27,6 +29,7 @@ export enum MutationTypes {
   
   STOP_PANNING = 'STOP_PANNING', 
 
+  TOGGLE_SHOW_PROFILE = 'TOGGLE_SHOW_PROFILE', 
   TOGGLE_MENU = 'TOGGLE_MENU', 
 
   SET_NEAR_STATE = 'SET_NEAR_STATE', 
@@ -47,6 +50,7 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.SELECT_NODE](state: State, node: Node) {
     state.selectedNode = node; 
+    state.menu.showProfile = false; 
   }, 
   [MutationTypes.STOP_CONNECTING](state: State) {
     delete state.connectFrom
@@ -66,14 +70,36 @@ export const mutations: MutationTree<State> = {
     }
     delete state.nodes[nodeId]
   },
-  [MutationTypes.UPDATE_NODE_TITLE](_state, payload: {node: Node, title: string}) {
-    payload.node.title = payload.title
+  [MutationTypes.CHANGE_NODE_TITLE](_state, payload: { node: Node, newTitle: string }) {
+    if(payload.node.title === payload.newTitle) {
+      delete payload.node.changes.title 
+    } else {
+      payload.node.changes.title = payload.newTitle
+    }
   }, 
-  [MutationTypes.UPDATE_NODE_NOTES](_state, payload: {node: Node, notes: string}) {
-    payload.node.notes = payload.notes
+  [MutationTypes.CHANGE_NODE_NOTES](_state, payload: {node: Node, newNotes: string}) {
+    if(payload.node.notes === payload.newNotes) {
+      delete payload.node.changes.notes 
+    } else {
+      payload.node.changes.notes = payload.newNotes
+    }
   }, 
-  [MutationTypes.UPDATE_FLOW_NOTES](_state, payload: {flow: Flow, notes: string}) {
-    payload.flow.notes = payload.notes
+  [MutationTypes.CHANGE_NODE_DEPOSIT](_state, payload: {node: Node, newDeposit: string}) {
+    if(payload.node.notes === payload.newDeposit) {
+      delete payload.node.changes.notes 
+    } else {
+      payload.node.changes.notes = payload.newDeposit
+    }
+  }, 
+  [MutationTypes.CHANGE_FLOW_NOTES](_state, payload: {flow: Flow, newNotes: string}) {
+    if(payload.flow.notes === payload.newNotes) {
+      delete payload.flow.changes.notes 
+    } else {
+      payload.flow.changes.notes = payload.newNotes
+    }
+  }, 
+  [MutationTypes.RESET_NODE_CHANGES](state, node: Node) {
+    node.changes = {}
   }, 
   [MutationTypes.OPEN_MENU](state) {
     state.menu.open = true
@@ -83,6 +109,9 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.STOP_PANNING](state) {
     state.map.panning = false 
+  }, 
+  [MutationTypes.TOGGLE_SHOW_PROFILE](state) {
+    state.menu.showProfile = !state.menu.showProfile;
   }, 
   [MutationTypes.TOGGLE_MENU](state) {
     state.menu.open = !state.menu.open

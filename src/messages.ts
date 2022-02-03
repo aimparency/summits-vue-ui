@@ -45,3 +45,10 @@ export interface NodeRemoval {
   node_id: string 
 }
 
+export interface NodeView {
+    id: string, 
+    title: string, 
+    notes: string, 
+    deposit: number, 
+    owner: string
+}

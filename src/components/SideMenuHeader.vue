@@ -1,5 +1,4 @@
-<template>
-  <div 
+<template> <div 
     class='side-menu-header'>
     <div 
       class='x'
@@ -15,7 +14,13 @@
       class='slot'>
       <slot></slot>
     </div>
-    <div class='x'>
+    <div @click='rbclick' class='x'>
+      <span v-if="$store.state.menu.showProfile">
+        &#128269;
+      </span>
+      <span v-else>
+        &#128100;
+      </span>
     </div>
   </div>
 </template>
@@ -30,6 +35,9 @@ export default defineComponent({
   props: {
   }, 
   methods: {
+    rbclick() {
+      this.$store.commit(MutationTypes.TOGGLE_SHOW_PROFILE) 
+    }, 
     lbclick() {
       this.$store.commit(MutationTypes.TOGGLE_MENU) 
     }

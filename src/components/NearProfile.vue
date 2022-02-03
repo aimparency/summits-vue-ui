@@ -1,44 +1,11 @@
 <template>
   <SideMenuHeader>
-    <h4> project details </h4>
+    <h4> near profile </h4>
   </SideMenuHeader>
-  <SideMenuContent class="node-details">
-    <h3> edit </h3>
-    <input 
-      class='title' 
-      :value="title" 
-      placeholder="<node title>"
-      @input="updateTitle"/>
-    <textarea 
-      ref="notes"
-      class='notes' 
-      :value="notes" 
-      placeholder="<notes>"
-      @input="updateNotes"/>
-    <input 
-      class='deposit' 
-      :value="deposit" 
-      @input="updateDeposit"/>
-    <button v-if='dirty' @click="reset">reset</button>
-    <button v-if='dirty' @click="commit">commit</button>
-    <h3> incoming flows </h3>
-    <div 
-      class="flow" 
-      v-for="pair, i in flows_from" 
-      @click="flowClick(pair.flow)" 
-      :key="i">
-      {{ pair.node.title || `node ${pair.node.id.substring(0,5)}...`}} <br/>
-      share: {{ pair.flow.share }}
-    </div>
-    <h3> outgoing flows </h3>
-    <div 
-      class="flow" 
-      v-for="pair, i in flows_into" 
-      @click="flowClick(pair.flow)" 
-      :key="i">
-      {{ pair.node.title || `node ${pair.node.id.substring(0,5)}...`}} <br/>
-      share: {{ pair.flow.share }}
-    </div>
+  <SideMenuContent class="near-profile">
+    <p>connection state: {{ $store.state.nearState }} </p>
+    <button>logout</button>
+    <button @click="requestSignIn">request sign in</button>
   </SideMenuContent>
 </template>
 
@@ -54,7 +21,7 @@ import SideMenuHeader from './SideMenuHeader.vue';
 import SideMenuContent from './SideMenuContent.vue'; 
 
 export default defineComponent({
-  name: 'NodeDetails',
+  name: 'NearProfile',
   components: {
     SideMenuHeader,
     SideMenuContent
@@ -68,16 +35,12 @@ export default defineComponent({
   computed: {
     dirty() : boolean {
       return ( 
-        this.node.unpublished || 
         this.node.changes.title !== undefined || 
         this.node.changes.notes !== undefined
       ) 
     }, 
     title() : string {
       return this.node.changes.title || this.node.title
-    }, 
-    deposit() : number {
-      return this.node.changes.deposit || this.node.deposit
     }, 
     notes() : string {
       return this.node.changes.notes || this.node.notes
@@ -106,12 +69,6 @@ export default defineComponent({
     }, 
   }, 
   methods: {
-    updateDeposit(e: Event) {
-      this.$store.commit(MutationTypes.CHANGE_NODE_DEPOSIT, {
-        node: this.node, 
-        newTitle: (<HTMLInputElement>e.target).value
-      })
-    }, 
     updateTitle(e: Event) {
       this.$store.commit(MutationTypes.CHANGE_NODE_TITLE, {
         node: this.node, 
@@ -127,11 +84,11 @@ export default defineComponent({
         newNotes: (<HTMLInputElement>e.target).value
       })
     }, 
-    reset() {
-      this.$store.commit(MutationTypes.RESET_NODE_CHANGES, this.node)
-    }, 
-    commit(e: Event) {
+    commit() {
       this.$store.dispatch(ActionTypes.COMMIT_NODE_CHANGES, this.node)
+    }, 
+    requestSignIn() {
+      this.$store.dispatch(ActionTypes.REQUEST_NEAR_SIGN_IN) 
     }, 
     flowClick(flow: Flow) {
       this.$store.dispatch(ActionTypes.FLOW_CLICK, flow)

@@ -1,4 +1,4 @@
-import { Node, Flow } from '@/types';
+import { Node, Flow, NearState } from '@/types';
 import { Vector2 } from 'three';
 
 export default interface State {
@@ -30,7 +30,28 @@ export default interface State {
     panning: boolean
   }, 
   menu: {
-    open: boolean
+    open: boolean, 
+    showProfile: boolean, 
   }, 
   nearState: NearState
+}
+
+export function getDefault() : State {
+  return {
+    nodes: {}, 
+    flows_from_into: {}, 
+    flows_into_from: {},
+    map: {
+      mouse: new Vector2(0,0), 
+      offset: new Vector2(0,0),
+      scale: 0.1, 
+      panBeginning: undefined, 
+      panning: false
+    }, 
+    menu: {
+      open: true, 
+      showProfile: true
+    }, 
+    nearState: 'disconnected'
+  }
 }

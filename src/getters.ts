@@ -10,12 +10,12 @@ export const getters: GetterTree<State, State> = {
     let node = state.nodes[node_id]
     if(node === undefined) {
       return '#f00'
+    } else if (node.unpublished == true) {
+      return '#777'
+    } else if(node.subLevel === -1) {
+      return '#444'
     } else {
-      if(node.subLevel === -1) {
-        return '#666'
-      } else {
-        return colorHash.hex(node.id); 
-      }
+      return colorHash.hex(node.id); 
     }
   }
 }
