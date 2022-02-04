@@ -23,9 +23,13 @@ export interface Node {
   }
 }
 
+export interface FlowId {
+  from: string,
+  into: string, 
+}
+
 export interface Flow {
-  from_id: string, 
-  into_id: string 
+  id: FlowId, 
   // general 
   share: number, 
   notes: string, 

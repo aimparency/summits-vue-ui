@@ -107,7 +107,7 @@ export default defineComponent({
     remove() {
       this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
       if(!this.node.unpublished) {
-        this.$store.dispatch(ActionTypes.COMMIT_NODE_REMOVAL, this.node.id) 
+        this.$store.dispatch(ActionTypes.ONCHAIN_REMOVE_NODE, this.node.id) 
       }
     }
   }

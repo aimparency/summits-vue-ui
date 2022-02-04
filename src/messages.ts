@@ -1,28 +1,5 @@
-// incoming messages
-export interface FlowUpdate {
-  from_id: string, 
-  into_id: string, 
-  notes?: string,
-  share?: number
-}
+import { FlowId } from './types'
 
-export interface NodeUpdate {
-  id: string, 
-  title?: string, 
-  notes?: string
-}
-
-export interface NodeUpdate {
-  id: string, 
-  title?: string, 
-  notes?: string
-}
-
-export interface Init {
-  node_ids: string[]
-}
-
-// outgoing messages
 export interface NodeCreationWithValue {
   id: string, 
   title: string, 
@@ -31,10 +8,7 @@ export interface NodeCreationWithValue {
 }
 
 export interface FlowCreation {
-  key: {
-    from_id: string,
-    into_id: string, 
-  }, 
+  id: FlowId, 
   dx: number, 
   dy: number, 
   notes: string, 
@@ -46,9 +20,17 @@ export interface NodeRemoval {
 }
 
 export interface NodeView {
-    id: string, 
-    title: string, 
-    notes: string, 
-    deposit: number, 
-    owner: string
+  id: string, 
+  title: string, 
+  notes: string, 
+  deposit: number, 
+  owner: string
+}
+
+export interface FlowView {
+  id: FlowId, 
+  dx: number, 
+  dy: number, 
+  notes: string, 
+  share: number
 }

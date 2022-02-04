@@ -12,6 +12,8 @@ import nearConfig from './near-config';
 import { ActionTypes } from './actions'; 
 import { MutationTypes } from './mutations'; 
 
+import { NodeView, FlowView } from './messages'; 
+
 export default function createNearLink () {
 
   return (store: Store<State>) => {
@@ -57,7 +59,8 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
   const contract = new Contract(account, contractAccountId, {
     viewMethods: [
       'get_seven_summits',
-      'get_node'
+      'get_node', 
+      'get_node_flows', 
     ], 
     changeMethods: [
       'create_node',
@@ -80,17 +83,30 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
   store.subscribeAction(action => {
     if(action.type === ActionTypes.LOAD_NODE) {
       // get_node
+      const nodeId = action.payload
       contract.get_node({
-        node_id: action.payload
+        node_id: nodeId
       }).then(
         (response:any) => {
           if(response.Ok) {
             console.log("should be stored in state:", response.Ok) 
-            store.dispatch(ActionTypes.SET_NODE_DATA, response.Ok) 
+            store.dispatch(ActionTypes.SET_NODE_DATA, response.Ok as NodeView) 
+            contract.get_node_flows({
+              node_id: nodeId
+            }).then( 
+              (response: any) => {
+                console.log("got get_node_flows response", response) 
+                if(response.Ok) {
+                  response.Ok.forEach((flowView: FlowView) => {
+                    store.dispatch(ActionTypes.SET_FLOW_DATA, flowView) 
+                  })
+                }
+              }
+            )
           }
         }
       )
-    } else if (action.type === ActionTypes.ONCHAIN_CREATE_NEW_NODE) {
+    } else if (action.type === ActionTypes.ONCHAIN_CREATE_NODE) {
       contract.create_node(
         action.payload
       ).then((result: any) => {
@@ -100,16 +116,16 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       contract.change_node(
         action.payload
       ).then((result: any) => {
-        console.log("result of subscribe call", result)
+        console.log("result of change_node call", result)
       }) 
-    } else if (action.type === ActionTypes.PUBLISH_FLOW_CREATION) {
+    } else if (action.type === ActionTypes.ONCHAIN_CREATE_FLOW) {
       contract.create_flow(
         action.payload
       ).then((result: any) => {
         console.log("result of create flow call", result)
       })
       // create_flow
-    } else if(action.type === ActionTypes.COMMIT_NODE_REMOVAL) {
+    } else if(action.type === ActionTypes.ONCHAIN_REMOVE_NODE) {
       contract.remove_node({
         node_id: action.payload
       }).then((result: any) => {
@@ -121,7 +137,5 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
         contractAccountId 
       )
     }
-    // update flow
-    // update_node
   }); 
 }

@@ -32,15 +32,15 @@ export default defineComponent({
     }, 
     fillColor() : string {
       const selectedNode = this.$store.state.selectedNode;
-      if ( selectedNode && selectedNode.id == this.flow.from_id ) {
+      if ( selectedNode && selectedNode.id == this.flow.id.from) {
         return '#ccc'; 
       } else {
-        return this.$store.getters.nodeColor(this.flow.from_id); 
+        return this.$store.getters.nodeColor(this.flow.id.from); 
       }
     }, 
     path() : string {
-      const from = this.$store.state.nodes[this.flow.from_id]
-      const into = this.$store.state.nodes[this.flow.into_id]
+      const from = this.$store.state.nodes[this.flow.id.from]
+      const into = this.$store.state.nodes[this.flow.id.into]
       return makeCircularPath(
         {x: from.x, y: from.y, r: from.r}, 
         this.flow.share, 

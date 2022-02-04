@@ -21,7 +21,7 @@
       @input="updateDeposit"/>
     <button v-if='dirty' @click="reset">reset</button>
     <button v-if='dirty' @click="commit">commit</button>
-    <h3> incoming flows </h3>
+    <h3 v-if="flows_from.length > 0"> incoming flows </h3>
     <div 
       class="flow" 
       v-for="pair, i in flows_from" 
@@ -30,7 +30,7 @@
       {{ pair.node.title || `node ${pair.node.id.substring(0,5)}...`}} <br/>
       share: {{ pair.flow.share }}
     </div>
-    <h3> outgoing flows </h3>
+    <h3 v-if="flows_into.length > 0"> outgoing flows </h3>
     <div 
       class="flow" 
       v-for="pair, i in flows_into" 
@@ -87,7 +87,7 @@ export default defineComponent({
       if(flows) {
         return Object.values(flows).map((flow:Flow) => ({
           flow, 
-          node: this.$store.state.nodes[flow.from_id]
+          node: this.$store.state.nodes[flow.id.from]
         }))
       } else {
         return []
@@ -98,7 +98,7 @@ export default defineComponent({
       if(flows) {
         return Object.values(flows).map((flow:Flow) => ({
           flow,
-          node: this.$store.state.nodes[flow.into_id]
+          node: this.$store.state.nodes[flow.id.into]
         }))
       } else {
         return []
@@ -130,8 +130,8 @@ export default defineComponent({
     reset() {
       this.$store.commit(MutationTypes.RESET_NODE_CHANGES, this.node)
     }, 
-    commit(e: Event) {
-      this.$store.dispatch(ActionTypes.COMMIT_NODE_CHANGES, this.node)
+    commit() {
+      this.$store.dispatch(ActionTypes.CHANGE_NODE, this.node)
     }, 
     flowClick(flow: Flow) {
       this.$store.dispatch(ActionTypes.FLOW_CLICK, flow)

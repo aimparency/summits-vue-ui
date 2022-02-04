@@ -37,13 +37,13 @@ export default defineComponent({
   }, 
   computed: {
     fromTitle() : string | undefined {
-      const node = this.$store.state.nodes[this.flow.from_id];
+      const node = this.$store.state.nodes[this.flow.id.from];
       if(node !== undefined) {
         return node.title
       }
     }, 
     intoTitle() : string | undefined {
-      const node = this.$store.state.nodes[this.flow.into_id]; 
+      const node = this.$store.state.nodes[this.flow.id.into]; 
       if(node !== undefined) {
         return node.title
       } 

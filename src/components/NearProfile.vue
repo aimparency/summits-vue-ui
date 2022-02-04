@@ -4,6 +4,11 @@
   </SideMenuHeader>
   <SideMenuContent class="near-profile">
     <p>connection state: {{ $store.state.nearState }} </p>
+    <p>
+    <a :href="walletUrl">wallet link</a> <br/>
+    <a :href="nodeUrl">node link</a> <br/>
+    <a :href="helperUrl">helper link</a>
+    </p>
     <button>logout</button>
     <button @click="requestSignIn">request sign in</button>
   </SideMenuContent>
@@ -12,13 +17,12 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { MutationTypes } from '@/mutations';
 import { ActionTypes } from '@/actions';
-
-import { Node, Flow } from '@/types';
 
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
+
+import nearConfig from '@/near-config'; 
 
 export default defineComponent({
   name: 'NearProfile',
@@ -33,66 +37,20 @@ export default defineComponent({
     }, 
   }, 
   computed: {
-    dirty() : boolean {
-      return ( 
-        this.node.changes.title !== undefined || 
-        this.node.changes.notes !== undefined
-      ) 
+    walletUrl() : string {
+      return nearConfig.walletUrl
     }, 
-    title() : string {
-      return this.node.changes.title || this.node.title
+    nodeUrl() : string {
+      return nearConfig.nodeUrl
     }, 
-    notes() : string {
-      return this.node.changes.notes || this.node.notes
-    }, 
-    flows_from() : {flow: Flow, node: Node}[] {
-      let flows = this.$store.state.flows_into_from[this.node.id] 
-      if(flows) {
-        return Object.values(flows).map((flow:Flow) => ({
-          flow, 
-          node: this.$store.state.nodes[flow.from_id]
-        }))
-      } else {
-        return []
-      }
-    }, 
-    flows_into() : {flow: Flow, node: Node}[] {
-      let flows = this.$store.state.flows_from_into[this.node.id] 
-      if(flows) {
-        return Object.values(flows).map((flow:Flow) => ({
-          flow,
-          node: this.$store.state.nodes[flow.into_id]
-        }))
-      } else {
-        return []
-      }
-    }, 
+    helperUrl() : string {
+      return nearConfig.helperUrl
+    }
   }, 
   methods: {
-    updateTitle(e: Event) {
-      this.$store.commit(MutationTypes.CHANGE_NODE_TITLE, {
-        node: this.node, 
-        newTitle: (<HTMLInputElement>e.target).value
-      })
-    }, 
-    updateNotes(e: Event) {
-      const target = <HTMLTextAreaElement>e.target
-      target.style.height = target.scrollHeight + 'px'
-
-      this.$store.commit(MutationTypes.CHANGE_NODE_NOTES, {
-        node: this.node, 
-        newNotes: (<HTMLInputElement>e.target).value
-      })
-    }, 
-    commit() {
-      this.$store.dispatch(ActionTypes.COMMIT_NODE_CHANGES, this.node)
-    }, 
     requestSignIn() {
       this.$store.dispatch(ActionTypes.REQUEST_NEAR_SIGN_IN) 
     }, 
-    flowClick(flow: Flow) {
-      this.$store.dispatch(ActionTypes.FLOW_CLICK, flow)
-    }
   }
 });
 </script>
@@ -108,24 +66,10 @@ h4 {
   text-align: center;
 }
 
-.node-details{
-  color: @foreground; 
-  .title{
-    font-size: 1.5rem;
-    margin-bottom:0.5rem; 
-  }
-  .notes {
-    height: 10em; 
-    margin-bottom:0.5rem; 
-  }
-  .flow {
-    background-color: tint(@background, 20%); 
-    text-align: left; 
-    border-radius: 0.5em; 
-    padding: 0.5em; 
-    margin-bottom: 0.5em; 
-    user-select: none; 
-    cursor: pointer; 
+.near-profile {
+  a {
+    color: #8af; 
   }
 }
+
 </style>
