@@ -39,6 +39,8 @@ export interface Flow {
   changes: {
     notes?: string
   }, 
+  dx: number, 
+  dy: number
 }
 
 export type NearState = 'disconnected' | 'connecting' | 'connected' | 'logging-in' | 'logged-in'

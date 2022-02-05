@@ -6,6 +6,7 @@ import { Flow, Node } from '@/types';
 
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
+import { Vector2 } from 'three';
 
 export enum ActionTypes {
   INIT = 'INIT', 
@@ -43,6 +44,8 @@ export enum ActionTypes {
 
   SET_NODE_DATA = 'SET_NODE_DATA', 
   SET_FLOW_DATA = 'SET_FLOW_DATA', 
+
+  RECALC_NODE_POSITION = 'RECALC_NODE_POSITION', 
 }
 
 function createDefaultNode() {
@@ -123,6 +126,13 @@ function set_flow_in_dict(
   return dict[i1][i2] = flow
 }
 
+/***
+ * this function calculates the factor to which a flow dx and dy is relative to
+ */
+function dFactor(from: Node, into: Node) : number {
+  return from.r + into.r
+}
+
 // maybe make a interface Actions with all the types only... To make typing be precise
 // check here: https://dev.to/3vilarthas/vuex-typescript-m4j
 // but maybe typing already works perfectly. 
@@ -131,14 +141,14 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.LOAD_NODE]({}, _nodeId: string) {
     // the aggregatorLink subscribes to this action
   }, 
-  [ActionTypes.UPDATE_NODE]({state}, nodeUpdate: Messages.NodeUpdate) {
-    if(nodeUpdate.id in state.nodes) {
-      Object.assign(state.nodes[nodeUpdate.id], {
-        ...nodeUpdate, 
-        updatePending: false, 
-      })
-    } 
-  }, 
+  //[ActionTypes.UPDATE_NODE]({state}, nodeUpdate: Messages.NodeUpdate) {
+  //  if(nodeUpdate.id in state.nodes) {
+  //    Object.assign(state.nodes[nodeUpdate.id], {
+  //      ...nodeUpdate, 
+  //      updatePending: false, 
+  //    })
+  //  } 
+  //}, 
   [ActionTypes.LOAD_NEIGHBOR_NODE](
     {state, dispatch}, 
     payload: {knownNodeId: string, newNodeId: string}
@@ -161,34 +171,34 @@ export const actions: ActionTree<State, State> = {
       }
     } 
   }, 
-  [ActionTypes.UPDATE_FLOW]({state, dispatch}, flowUpdate: Messages.FlowUpdate) {
-    let ignoreUpdate = true
-    if(!(flowUpdate.from_id in state.nodes)) {
-      if(flowUpdate.into_id in state.nodes) {
-        ignoreUpdate = false
-        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
-          knownNodeId: flowUpdate.into_id, 
-          newNodeId: flowUpdate.from_id
-        })
-      }
-    } else {
-      ignoreUpdate = false
-      if(!(flowUpdate.into_id in state.nodes)) {
-        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
-          knownNodeId: flowUpdate.from_id, 
-          newNodeId: flowUpdate.into_id
-        }) 
-      } else {
-        dispatch(ActionTypes.COMPARE_AND_RAISE, {
-          a: state.nodes[flowUpdate.from_id], 
-          b: state.nodes[flowUpdate.into_id]
-        })
-      }
-    }
-    if(!ignoreUpdate) {
-      dispatch(ActionTypes.UPDATE_OR_CREATE_FLOW, flowUpdate)
-    }
-  }, 
+  //[ActionTypes.UPDATE_FLOW]({state, dispatch}, flowUpdate: Messages.FlowUpdate) {
+  //  let ignoreUpdate = true
+  //  if(!(flowUpdate.from_id in state.nodes)) {
+  //    if(flowUpdate.into_id in state.nodes) {
+  //      ignoreUpdate = false
+  //      dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
+  //        knownNodeId: flowUpdate.into_id, 
+  //        newNodeId: flowUpdate.from_id
+  //      })
+  //    }
+  //  } else {
+  //    ignoreUpdate = false
+  //    if(!(flowUpdate.into_id in state.nodes)) {
+  //      dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
+  //        knownNodeId: flowUpdate.from_id, 
+  //        newNodeId: flowUpdate.into_id
+  //      }) 
+  //    } else {
+  //      dispatch(ActionTypes.COMPARE_AND_RAISE, {
+  //        a: state.nodes[flowUpdate.from_id], 
+  //        b: state.nodes[flowUpdate.into_id]
+  //      })
+  //    }
+  //  }
+  //  if(!ignoreUpdate) {
+  //    dispatch(ActionTypes.UPDATE_OR_CREATE_FLOW, flowUpdate)
+  //  }
+  //}, 
   [ActionTypes.COMPARE_AND_RAISE]({dispatch}, payload: {a: Node, b: Node}) {
     let raiseNode : Node | undefined 
     let newLevel =  0
@@ -282,7 +292,7 @@ export const actions: ActionTree<State, State> = {
       updatePending: false
     }) 
   }, 
-  [ActionTypes.SET_FLOW_DATA]({state}, flowView: Messages.FlowView) {
+  [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
     if(flow === undefined) {
       flow = {
@@ -297,13 +307,69 @@ export const actions: ActionTree<State, State> = {
       })
     }
     set_flow(state, flow) 
+    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.from, damping: 0.7})
+    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.into, damping: 0.7})
+  }, 
+  [ActionTypes.RECALC_NODE_POSITION]({state, dispatch}, payload: { nodeId: string, damping: number}) {
+    const node = state.nodes[payload.nodeId]
+    // ok, everything happens in sizes relative to this node as long as possible
+    const references = []
+    const neighborIds = []
+    const runs = [{
+      dict: state.flows_from_into, 
+      sign: -1
+    }, {
+      dict: state.flows_into_from, 
+      sign: 1
+    }]
+    let totalWeight = 0
+    for(let run of runs) {
+      if(run.dict[payload.nodeId] !== undefined) {
+        for(let neighborId in run.dict[payload.nodeId]) {
+          const neighbor = state.nodes[neighborId]
+          const flow = run.dict[payload.nodeId][neighborId]
+          const f = dFactor(node, neighbor) * run.sign
+          const weight = flow.share / (Math.pow(flow.dx, 2) + Math.pow(flow.dy, 2)) // 1/x^2
+          references.push({
+            x: neighbor.x + flow.dx * f, 
+            y: neighbor.y + flow.dy * f, 
+            weight
+          })
+          neighborIds.push(neighborId)
+          totalWeight += weight
+        }
+      }
+    }
+    let newX = node.x * payload.damping
+    let newY = node.y * payload.damping
+    const wf = 1 / totalWeight * (1 - payload.damping) 
+    for(let reference of references) {
+      const f = reference.weight * wf
+      newX += f * reference.x
+      newY += f * reference.y
+    }
+    node.x = newX
+    node.y = newY
+    const increasedDamping = payload.damping + 0.07
+    if(increasedDamping < 0.95) {
+      for(let nId of neighborIds) {
+        dispatch(ActionTypes.RECALC_NODE_POSITION, {
+          nodeId: nId, 
+          damping: increasedDamping
+        }) 
+      }
+    }
   }, 
   [ActionTypes.CREATE_NEW_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
+    const fInv = 1 / dFactor(payload.from, payload.into)
+
     let flow: Flow = {
       id: {
         from: payload.from.id, 
         into: payload.into.id, 
       }, 
+      dx: (payload.into.x - payload.from.x) * fInv, 
+      dy: (payload.into.y - payload.from.y) * fInv, 
       updatePending: true, 
       share: Math.random() * 0.25 + 0.01, 
       notes: "", 
@@ -317,8 +383,8 @@ export const actions: ActionTree<State, State> = {
       }, 
       notes: flow.notes, 
       share: flow.share, 
-      dx: (payload.into.x - payload.from.x) / payload.from.r, 
-      dy: (payload.into.y - payload.from.y) / payload.from.r
+      dx: (payload.into.x - payload.from.x) * fInv, 
+      dy: (payload.into.y - payload.from.y) * fInv
     }
 
     if(undefined !== get_flow(state, flow.id.from, flow.id.into)) {
