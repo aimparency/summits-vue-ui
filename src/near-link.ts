@@ -98,7 +98,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       // get_node
       const nodeId = action.payload
       contract.get_node({
-        node_id: nodeId
+        id: nodeId
       }).then(
         (result:any) => {
           if('Ok' in result) {
@@ -106,7 +106,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
             let nodeView = result.Ok as Messages.NodeView
             store.commit(MutationTypes.SET_NODE_DATA, nodeView) 
             contract.get_node_flows({
-              node_id: nodeId
+              id: nodeId
             }).then( 
               (result: any) => {
                 console.log("got get_node_flows result", result) 
@@ -137,7 +137,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
             store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeCreation.id)
             if(store.state.homeUnset) {
               contract.set_home_node_id({
-                home_node_id: nodeCreation.id
+                id: nodeCreation.id
               }).then(
                 (result: any) => {
                   if(result.Err) {
@@ -176,7 +176,17 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       ).then(
         (result: any) => {
           if('Ok' in result) {
+            console.log("change ok") 
+            let payload = {
+              nodeId: nodeChange.id, 
+              damping: 0.7
+            }
+            console.log(payload) 
             store.commit(MutationTypes.APPLY_CHANGES, nodeChange.id)
+            if(nodeChange.changes.deposit) {
+              console.log("deposit ...") 
+              store.dispatch(ActionTypes.RECALC_NODE_POSITION, payload)
+            }
             store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeChange.id)
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, result.Err)
@@ -206,7 +216,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       // create_flow
     } else if(action.type === ActionTypes.COMMIT_REMOVE_NODE) {
       contract.remove_node({
-        node_id: action.payload
+        id: action.payload
       }).then((result: any) => {
         console.log("result of remove node", result) 
       })

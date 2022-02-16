@@ -5,6 +5,8 @@
 @error: #e02; 
 @info: #59e; 
 
+@roundsize: 0.5rem; 
+
 button.standard {
   box-sizing: border-box; 
   border: none; 
@@ -12,8 +14,8 @@ button.standard {
   background-color: shade(@foreground, 20%); 
   font-size: 1rem;
   padding: 1rem; 
-  margin: 0.2rem; 
-  border-radius: 1em; 
+  margin: 1rem 0.2rem 0.5rem 0.5rem; 
+  border-radius: 2 * @roundsize; 
   cursor: pointer; 
 }
 
@@ -23,7 +25,7 @@ input.standard, textarea.standard {
   width: 100%; 
   background-color: shade(@background, 20%);
   border: none; 
-  border-radius: 0.5em;
+  border-radius: @roundsize;
   padding: 0.5rem; 
   &:focus{
     outline: 0.2rem solid shade(@foreground, 20%); 

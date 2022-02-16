@@ -96,11 +96,11 @@ export const mutations: MutationTree<State> = {
       payload.node.changes.notes = payload.newNotes
     }
   }, 
-  [MutationTypes.CHANGE_NODE_DEPOSIT](_state, payload: {node: Node, newDeposit: string}) {
-    if(payload.node.notes === payload.newDeposit) {
-      delete payload.node.changes.notes 
+  [MutationTypes.CHANGE_NODE_DEPOSIT](_state, payload: {node: Node, newDeposit: number}) {
+    if(payload.node.deposit === payload.newDeposit) {
+      delete payload.node.changes.deposit
     } else {
-      payload.node.changes.notes = payload.newDeposit
+      payload.node.changes.deposit = payload.newDeposit
     }
   }, 
   [MutationTypes.CHANGE_FLOW_NOTES](_state, payload: {flow: Flow, newNotes: string}) {
@@ -156,8 +156,12 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.APPLY_CHANGES](state, nodeId: string) {
     let node = state.nodes[nodeId]
+    
     if(node) {
       Object.assign(node, node.changes)
+      if(node.changes.deposit) {
+        node.r = node.changes.deposit
+      }
       node.changes = {}
     }
   }, 

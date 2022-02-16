@@ -15,10 +15,15 @@
       :value="notes" 
       placeholder="<notes>"
       @input="updateNotes"/>
-    <input 
-      class='standard deposit' 
-      :value="deposit" 
-      @input="updateDeposit"/>
+    <Slider 
+      name='deposit'
+      left='half'
+      right='double'
+      :from='sliderOrigin.deposit/2'
+      :to='sliderOrigin.deposit*2'
+      :value='deposit'
+      @drag-end='updateDepositSliderOrigin'
+      @update='updateDeposit'/>
     <button class='standard' v-if='dirty' @click="reset">reset</button>
     <button class='standard' v-if='dirty' @click="commit">commit</button>
     <h3 v-if="flows_from.length > 0"> incoming flows </h3>
@@ -52,13 +57,22 @@ import { Node, Flow } from '@/types';
 
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
+import Slider from './Slider.vue'; 
 
 export default defineComponent({
   name: 'NodeDetails',
   components: {
     SideMenuHeader,
-    SideMenuContent
+    SideMenuContent, 
+    Slider
   },
+  data() {
+    return {
+      sliderOrigin: {
+        deposit: this.node.deposit
+      }
+    }
+  }, 
   props: {
     node: {
       type: Object as PropType<Node>,
@@ -69,18 +83,17 @@ export default defineComponent({
     dirty() : boolean {
       return ( 
         this.node.unpublished || 
-        this.node.changes.title !== undefined || 
-        this.node.changes.notes !== undefined
+        Object.keys(this.node.changes).length > 0 
       ) 
     }, 
     title() : string {
       return this.node.changes.title || this.node.title
     }, 
-    deposit() : number {
-      return this.node.changes.deposit || this.node.deposit
-    }, 
     notes() : string {
       return this.node.changes.notes || this.node.notes
+    }, 
+    deposit() : number {
+      return this.node.changes.deposit || this.node.deposit
     }, 
     flows_from() : {flow: Flow, node: Node}[] {
       let flows = this.$store.state.flows_into_from[this.node.id] 
@@ -106,10 +119,13 @@ export default defineComponent({
     }, 
   }, 
   methods: {
-    updateDeposit(e: Event) {
+    updateDepositSliderOrigin(){
+      this.sliderOrigin.deposit = this.deposit
+    }, 
+    updateDeposit(v: number) {
       this.$store.commit(MutationTypes.CHANGE_NODE_DEPOSIT, {
         node: this.node, 
-        newTitle: (<HTMLInputElement>e.target).value
+        newDeposit: v
       })
     }, 
     updateTitle(e: Event) {

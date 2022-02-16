@@ -30,11 +30,9 @@ export default defineComponent({
 
 <style lang="less">
 @import '~@/global.less';
-* {
-  overflow: hidden
-}
 body {
   color: @foreground; 
+  overflow: hidden
 }
 #app {
   margin: 0; 

@@ -216,8 +216,9 @@ export const actions: ActionTree<State, State> = {
         deposit: node.changes.deposit || node.deposit
       }) 
     } else {
+      console.log("alreadyy undefined?", node.id, node) 
       dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {
-        node_id: node.id,
+        id: node.id,
         changes: {
           ...node.changes
         }
@@ -276,8 +277,8 @@ export const actions: ActionTree<State, State> = {
       })
     }
     set_flow(state, flow) 
-    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.from, damping: 0.7})
-    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.into, damping: 0.7})
+    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.from, damping: 0.6})
+    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.into, damping: 0.6})
   }, 
   [ActionTypes.RECALC_NODE_POSITION]({state, dispatch}, payload: { nodeId: string, damping: number}) {
     const node = state.nodes[payload.nodeId]
@@ -319,7 +320,7 @@ export const actions: ActionTree<State, State> = {
     }
     node.x = newX
     node.y = newY
-    const increasedDamping = payload.damping + 0.07
+    const increasedDamping = payload.damping + 0.10
     if(increasedDamping < 0.95) {
       for(let nId of neighborIds) {
         dispatch(ActionTypes.RECALC_NODE_POSITION, {

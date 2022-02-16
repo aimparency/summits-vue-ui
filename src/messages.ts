@@ -25,7 +25,7 @@ export interface FlowCreation {
 }
 
 export interface NodeRemoval {
-  node_id: string 
+  id: string 
 }
 
 export interface NodeView {

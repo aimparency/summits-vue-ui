@@ -1,7 +1,7 @@
 <template>
   <g class="node"
     :transform="`translate(${node.x} ${node.y})`">
-    <g :transform="`scale(${node.deposit})`">
+    <g :transform="`scale(${node.changes.deposit || node.r})`">
       <circle 
         :class="{selected, loading, placeholder}"
         :fill="fillColor" 

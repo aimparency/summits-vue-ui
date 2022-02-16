@@ -4,10 +4,10 @@
       class='x'
       @click="lbclick">
       <span v-if="$store.state.menu.open">
-        &#128473; 
+        &gt; 
       </span>
       <span v-else>
-        &#9776; 
+        &lt; 
       </span>
     </div>
     <div
@@ -16,7 +16,7 @@
     </div>
     <div @click='rbclick' class='x'>
       <span v-if="$store.state.menu.showProfile">
-        &#128269;
+        &#128473; 
       </span>
       <span v-else>
         &#128100;
