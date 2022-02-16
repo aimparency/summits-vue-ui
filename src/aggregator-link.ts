@@ -4,7 +4,7 @@ import State from './state';
 import * as Messages from './messages';
 
 export default function createAggregatorLink () {
-  let socket = new WebSocket('ws://localhost:3030/v1')
+  let socket = new WebSocket('ws://127.0.0.1:3031/v1')
   return (store: Store<State>) => {
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data) as any;

@@ -5,22 +5,22 @@
   <SideMenuContent class="node-details">
     <h3> edit </h3>
     <input 
-      class='title' 
+      class='standard title' 
       :value="title" 
       placeholder="<node title>"
       @input="updateTitle"/>
     <textarea 
       ref="notes"
-      class='notes' 
+      class='standard notes' 
       :value="notes" 
       placeholder="<notes>"
       @input="updateNotes"/>
     <input 
-      class='deposit' 
+      class='standard deposit' 
       :value="deposit" 
       @input="updateDeposit"/>
-    <button v-if='dirty' @click="reset">reset</button>
-    <button v-if='dirty' @click="commit">commit</button>
+    <button class='standard' v-if='dirty' @click="reset">reset</button>
+    <button class='standard' v-if='dirty' @click="commit">commit</button>
     <h3 v-if="flows_from.length > 0"> incoming flows </h3>
     <div 
       class="flow" 
@@ -131,10 +131,10 @@ export default defineComponent({
       this.$store.commit(MutationTypes.RESET_NODE_CHANGES, this.node)
     }, 
     commit() {
-      this.$store.dispatch(ActionTypes.CHANGE_NODE, this.node)
+      this.$store.dispatch(ActionTypes.COMMIT_NODE, this.node)
     }, 
     flowClick(flow: Flow) {
-      this.$store.dispatch(ActionTypes.FLOW_CLICK, flow)
+      this.$store.dispatch(ActionTypes.SELECT_FLOW, flow)
     }
   }
 });

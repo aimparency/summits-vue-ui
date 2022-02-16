@@ -6,7 +6,7 @@
     <h3> {{ fromTitle || "<from project>"}} -> {{ intoTitle || "<into project>" }} </h3>
     <p> share: {{ flow.share }} </p>
     <textarea 
-      class='notes' 
+      class='standard notes' 
       :value="flow.notes" 
       placeholder="<notes>"
       @input="updateNotes"/>

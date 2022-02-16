@@ -1,7 +1,7 @@
 <template>
   <SideMenuHeader
     class='search-bar'>
-    <input placeholder="search...">
+    <input class="standard" placeholder="search...">
   </SideMenuHeader>
   <SideMenuContent v-if="results !== undefined">
     results...

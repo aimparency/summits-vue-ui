@@ -1,6 +1,15 @@
 import { FlowId } from './types'
 
-export interface NodeCreationWithValue {
+export interface NodeChange {
+  id: string, 
+  changes: {
+    title: string | undefined, 
+    notes: string | undefined,  
+    deposit: number | undefined
+  }
+}
+
+export interface NodeCreation {
   id: string, 
   title: string, 
   notes: string, 

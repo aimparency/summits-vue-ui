@@ -1,9 +1,9 @@
 <template>
   <g class="node"
     :transform="`translate(${node.x} ${node.y})`">
-    <g :transform="`scale(${node.r})`">
+    <g :transform="`scale(${node.deposit})`">
       <circle 
-        :class="{ selected, loading, placeholder }"
+        :class="{selected, loading, placeholder}"
         :fill="fillColor" 
         cx="0" 
         cy="0" 
@@ -11,11 +11,17 @@
         @click.stop='select'
       />
       <text
+        y="-1.2"
+        x="0"
+        class="label debug">
+        {{node.subLevel}}
+      </text>
+
+      <text
         v-if="!placeholder" 
         class="label"
         x="0"
         y="0">
-        <!--{{ node.subLevel }}-->
         <tspan 
           x="0"
           :dy="i == 0 ? (-0.3 * (titleLines.length - 1) / 2) : 0.3 "
@@ -51,7 +57,6 @@ const lineLengths = [
 
 const totalCharacters = lineLengths.map(lines => lines.reduce((prev, curr) => prev + curr)); 
 
-
 export default defineComponent({
   name: 'NodeSVG',
   components: {
@@ -85,10 +90,10 @@ export default defineComponent({
       return this.$store.state.selectedNode == this.node; 
     }, 
     loading() : boolean {
-      return this.node.updatePending
+      return this.node.updatePending || this.node.pendingTransactions > 0
     }, 
     placeholder() : boolean {
-      return this.node.subLevel === -1
+      return this.node.subLevel < 0
     }, 
     showTools() : boolean {
       return this.selected && this.$store.state.connectFrom == undefined; 
@@ -99,15 +104,16 @@ export default defineComponent({
   },
   methods: {
     select() {
-      this.$store.dispatch(ActionTypes.NODE_CLICK, this.node)
+      this.$store.dispatch(ActionTypes.NODE_SVG_CLICK, this.node)
     }, 
     connect() {
       this.$store.commit(MutationTypes.START_CONNECTING, this.node)
     }, 
     remove() {
-      this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
-      if(!this.node.unpublished) {
-        this.$store.dispatch(ActionTypes.ONCHAIN_REMOVE_NODE, this.node.id) 
+      if(this.node.unpublished) {
+        this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
+      } else {
+        this.$store.dispatch(ActionTypes.COMMIT_REMOVE_NODE, this.node.id) 
       }
     }
   }
@@ -121,18 +127,16 @@ export default defineComponent({
     cursor: pointer; 
     transition: stroke-dasharray;  
     stroke-width: 0.075;
+    &.selected {
+      stroke: #ccc; 
+    }
     &.loading{
       stroke: #ccc; 
       animation: dash 1.5s ease-in-out infinite;
       stroke-linecap: round;
     }
-    &.selected {
-      stroke: #ccc; 
-      animation: none; 
-    }
     &.placeholder {
-      stroke: #999; 
-      fill: #444; 
+      fill: #555; 
     }
   }
   text {

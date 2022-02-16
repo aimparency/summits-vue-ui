@@ -62,6 +62,7 @@ export default defineComponent({
     left: 0; 
   }
   .x {
+    user-select:none; 
     width: 2.5rem; 
     height: 2.5rem; 
     background-color: shade(@foreground, 20%); 

@@ -2,74 +2,64 @@ import State from './state';
 import * as Messages from './messages';
 
 import { v4 as uuid } from 'uuid'; 
-import { Flow, Node } from '@/types'; 
+import { Flow, Node, createDefaultFlow, createDefaultNode } from '@/types'; 
 
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
-import { Vector2 } from 'three';
 
 export enum ActionTypes {
-  INIT = 'INIT', 
-
   LOAD_NODE = 'LOAD_NODE',
   LOAD_NEIGHBOR_NODE = 'LOAD_NEIGHBOR_NODE',
 
   COMPARE_AND_RAISE = 'COMPARE_AND_RAISE', 
   SPILL_SUB_LEVEL = 'SPILL_SUB_LEVEL',
 
-  UPDATE_NODE = 'UPDATE_NODE',
-  UPDATE_FLOW = 'UPDATE_FLOW',
 
-  UPDATE_OR_CREATE_FLOW = 'UPDATE_OR_CREATE_FLOW', 
+  SET_FLOW_DATA = 'SET_FLOW_DATA', 
 
+  // Node actions
+  CREATE_NODE = 'CREATE_NODE', 
+
+
+  COMMIT_NODE = 'COMMIT_NODE',
   ONCHAIN_CREATE_NODE = 'ONCHAIN_CREATE_NODE', 
-  CREATE_NEW_NODE = 'CREATE_NEW_NODE', 
-
   ONCHAIN_CHANGE_NODE = 'ONCHAIN_CHANGE_NODE', 
-  CHANGE_NODE = 'CHANGE_NODE',
 
+  COMMIT_REMOVE_NODE = 'COMMIT_REMOVE_NODE', 
   REMOVE_NODE = 'REMOVE_NODE', 
-  ONCHAIN_REMOVE_NODE = 'ONCHAIN_REMOVE_NODE', 
 
-  CREATE_NEW_FLOW = 'CREATE_NEW_FLOW', 
+  // Flow actions
+  CREATE_FLOW = 'CREATE_FLOW', 
+
+
+  COMMIT_FLOW = 'COMMIT_FLOW', 
   ONCHAIN_CREATE_FLOW = 'ONCHAIN_CREATE_FLOW', 
+  ONCHAIN_CHANGE_FLOW = 'ONCAHIN_CHANGE_FLOW', 
 
+  COMMIT_REMOVE_FLOW = 'COMMIT_REMOVE_FLOW', 
+  REMOVE_FLOW = 'REMOVE_FLOW', 
+
+  CREATE_MISSING_NODES_AND_SET_FLOW_DATA = 'CREATE_MISSING_NODES_AND_SET_FLOW_DATA',
+
+  //
   UI_ERROR = 'UI_ERROR', 
+  NEAR_ERROR = 'NEAR_ERROR', 
+  TRANSACTION_ERROR = 'TRANSACTION_ERROR', 
 
-  NODE_CLICK = 'NODE_CLICK', 
-  FLOW_CLICK = 'FLOW_CLICK', 
+  // clicks
+  NODE_SVG_CLICK = 'NODE_SVG_CLICK', 
+  FLOW_SVG_CLICK = 'FLOW_SVG_CLICK', 
   NOWHERE_CLICK = 'NOWHERE_CLICK', 
 
-  REQUEST_NEAR_SIGN_IN = 'REQUEST_NEAR_SIGN_IN', 
+  SELECT_NODE = 'SELECT_NODE', 
+  SELECT_FLOW = 'SELECT_FLOW', 
 
-  SET_NODE_DATA = 'SET_NODE_DATA', 
-  SET_FLOW_DATA = 'SET_FLOW_DATA', 
+  REQUEST_NEAR_SIGN_IN = 'REQUEST_NEAR_SIGN_IN', 
+  NEAR_LOGOUT = 'NEAR_LOGOUT', 
 
   RECALC_NODE_POSITION = 'RECALC_NODE_POSITION', 
 }
 
-function createDefaultNode() {
-  return {
-    x: (Math.random() * 18 - 9),
-    y: (Math.random() * 18 - 9), 
-    r: Math.random() * 0.5 + 0.5, 
-    title: "", 
-    notes: "", 
-    unpublished: false, 
-    changes: {
-    }, 
-    deposit: 1
-  }
-}
-
-function createDefaultFlow() {
-  return {
-    notes: "", 
-    share: Math.random() * 0.25 + 0.01, 
-    changes: {}, 
-    unpublished: false
-  }
-}
 
 function get_flow(state: State, fromId: string, intoId: string) : Flow | undefined { 
   let from_into_flow = flow_exists_in_dict(
@@ -141,64 +131,32 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.LOAD_NODE]({}, _nodeId: string) {
     // the aggregatorLink subscribes to this action
   }, 
-  //[ActionTypes.UPDATE_NODE]({state}, nodeUpdate: Messages.NodeUpdate) {
-  //  if(nodeUpdate.id in state.nodes) {
-  //    Object.assign(state.nodes[nodeUpdate.id], {
-  //      ...nodeUpdate, 
-  //      updatePending: false, 
-  //    })
-  //  } 
-  //}, 
   [ActionTypes.LOAD_NEIGHBOR_NODE](
     {state, dispatch}, 
-    payload: {knownNodeId: string, newNodeId: string}
+    payload: {knownNodeId: string, newNodeId: string, x: number, y: number}
   ) {
     const knownNode = state.nodes[payload.knownNodeId];
     if(knownNode.subLevel > 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
         id: payload.newNodeId, 
+        x: payload.x, 
+        y: payload.y,
         updatePending: true, 
-        subLevel: knownNode.subLevel - 1
+        subLevel: knownNode.subLevel - 1, 
       }
       dispatch(ActionTypes.LOAD_NODE, payload.newNodeId)
     } else if (knownNode.subLevel === 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
         id: payload.newNodeId, 
+        x: payload.x, 
+        y: payload.y,
         updatePending: false, 
-        subLevel: -1
+        subLevel: knownNode.subLevel - 1,
       }
     } 
   }, 
-  //[ActionTypes.UPDATE_FLOW]({state, dispatch}, flowUpdate: Messages.FlowUpdate) {
-  //  let ignoreUpdate = true
-  //  if(!(flowUpdate.from_id in state.nodes)) {
-  //    if(flowUpdate.into_id in state.nodes) {
-  //      ignoreUpdate = false
-  //      dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
-  //        knownNodeId: flowUpdate.into_id, 
-  //        newNodeId: flowUpdate.from_id
-  //      })
-  //    }
-  //  } else {
-  //    ignoreUpdate = false
-  //    if(!(flowUpdate.into_id in state.nodes)) {
-  //      dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
-  //        knownNodeId: flowUpdate.from_id, 
-  //        newNodeId: flowUpdate.into_id
-  //      }) 
-  //    } else {
-  //      dispatch(ActionTypes.COMPARE_AND_RAISE, {
-  //        a: state.nodes[flowUpdate.from_id], 
-  //        b: state.nodes[flowUpdate.into_id]
-  //      })
-  //    }
-  //  }
-  //  if(!ignoreUpdate) {
-  //    dispatch(ActionTypes.UPDATE_OR_CREATE_FLOW, flowUpdate)
-  //  }
-  //}, 
   [ActionTypes.COMPARE_AND_RAISE]({dispatch}, payload: {a: Node, b: Node}) {
     let raiseNode : Node | undefined 
     let newLevel =  0
@@ -228,29 +186,13 @@ export const actions: ActionTree<State, State> = {
       })
     }
   }, 
-  [ActionTypes.INIT]({state, dispatch}, nodeIds: string[]) {
-    for(let nodeId of nodeIds) {
-      state.nodes[nodeId] = {
-        ...createDefaultNode(), 
-        id: nodeId, 
-        updatePending: true, 
-        subLevel: 2
-      }
-      dispatch(ActionTypes.LOAD_NODE, nodeId)
-    }
-  }, 
-  [ActionTypes.ONCHAIN_CHANGE_NODE]({}, _payload) {
+  [ActionTypes.ONCHAIN_CHANGE_NODE]({}, _nodeChange: Messages.NodeChange) {
     //subscribed to by near-link
   }, 
-  [ActionTypes.ONCHAIN_CREATE_NODE]({}, _payload: {
-    id: string, 
-    title: string, 
-    notes: string, 
-    deposit: number,
-  }) {
+  [ActionTypes.ONCHAIN_CREATE_NODE]({}, _nodeCreation: Messages.NodeCreation) {
     //subscribed to by near-link
   }, 
-  [ActionTypes.CREATE_NEW_NODE]({state, commit}, payload: {x: number, y: number}) {
+  [ActionTypes.CREATE_NODE]({state, commit}, payload: {x: number, y: number}) {
     let nodeId = uuid(); 
 
     const node = state.nodes[nodeId] = {
@@ -265,7 +207,7 @@ export const actions: ActionTree<State, State> = {
 
     commit(MutationTypes.SELECT_NODE, node)
   }, 
-  [ActionTypes.CHANGE_NODE]({dispatch}, node: Node) {
+  [ActionTypes.COMMIT_NODE]({dispatch}, node: Node) {
     if(node.unpublished) {
       dispatch(ActionTypes.ONCHAIN_CREATE_NODE, {
         id: node.id, 
@@ -281,16 +223,43 @@ export const actions: ActionTree<State, State> = {
         }
       }) 
     }
-    Object.assign(node, node.changes)
-    // this action is subscribed to by the near-link plugin
   }, 
-  [ActionTypes.SET_NODE_DATA]({state}, nodeView: Messages.NodeView) {
-    Object.assign(state.nodes[nodeView.id], {
-      title: nodeView.title, 
-      notes: nodeView.notes, 
-      deposit: nodeView.deposit, 
-      updatePending: false
-    }) 
+  [ActionTypes.CREATE_MISSING_NODES_AND_SET_FLOW_DATA](
+    {state, dispatch}, 
+    flowView: Messages.FlowView
+  ) {
+    let ignoreUpdate = true
+    let from = state.nodes[flowView.id.from]
+    let into = state.nodes[flowView.id.into]
+    if(!from) {
+      if(into) {
+        ignoreUpdate = false
+        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
+          knownNodeId: flowView.id.into, 
+          newNodeId: flowView.id.from, 
+          x: into.x - flowView.dx, 
+          y: into.y - flowView.dy
+        })
+      }
+    } else {
+      ignoreUpdate = false
+      if(!(flowView.id.into in state.nodes)) {
+        dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
+          knownNodeId: flowView.id.from, 
+          newNodeId: flowView.id.into,
+          x: from.x + flowView.dx, 
+          y: from.y + flowView.dy
+        }) 
+      } else {
+        dispatch(ActionTypes.COMPARE_AND_RAISE, {
+          a: state.nodes[flowView.id.from], 
+          b: state.nodes[flowView.id.into]
+        })
+      }
+    }
+    if(!ignoreUpdate) {
+      dispatch(ActionTypes.SET_FLOW_DATA, flowView)
+    }
   }, 
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
@@ -360,7 +329,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.CREATE_NEW_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
+  [ActionTypes.CREATE_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
     const fInv = 1 / dFactor(payload.from, payload.into)
 
     let flow: Flow = {
@@ -377,41 +346,70 @@ export const actions: ActionTree<State, State> = {
       unpublished: true, 
     };
 
-    let msg: Messages.FlowCreation = {
-      id: {
-        ...flow.id
-      }, 
-      notes: flow.notes, 
-      share: flow.share, 
-      dx: (payload.into.x - payload.from.x) * fInv, 
-      dy: (payload.into.y - payload.from.y) * fInv
-    }
-
     if(undefined !== get_flow(state, flow.id.from, flow.id.into)) {
-      dispatch(ActionTypes.UI_ERROR, 'could not create a new flow, because a flow already exists') 
+      dispatch(
+        ActionTypes.UI_ERROR,
+        'Could not create a new flow, because a flow between these nodes exists already'
+      )
     } else {
+      let msg: Messages.FlowCreation = {
+        id: {
+          ...flow.id
+        }, 
+        notes: flow.notes, 
+        share: flow.share, 
+        dx: (payload.into.x - payload.from.x) * fInv, 
+        dy: (payload.into.y - payload.from.y) * fInv
+      }
       set_flow(state, flow) 
+      dispatch(ActionTypes.COMPARE_AND_RAISE, {
+        a: payload.from, 
+        b: payload.into
+      })
+
       dispatch(ActionTypes.ONCHAIN_CREATE_FLOW, msg)
     }
   }, 
   [ActionTypes.ONCHAIN_CREATE_FLOW]({}, _payload: Messages.FlowCreation) {
     // only dispatched for aggregator plugin
   }, 
-  [ActionTypes.UI_ERROR]({}, _errorMessage: string) {
-    // TODO
+  [ActionTypes.UI_ERROR]({state}, msg: string) {
+    state.logEntries.push({
+      id: state.nextLogEntryId++, 
+      msg: "UI_ERROR: " + msg, 
+      type: 'ui-error'
+    })
   }, 
-  [ActionTypes.NODE_CLICK]({state, commit, dispatch}, node: Node) {
+  [ActionTypes.NEAR_ERROR]({state}, msg: string) {
+    state.logEntries.push({
+      id: state.nextLogEntryId++, 
+      msg: "NEAR_ERROR: " + msg, 
+      type: 'near-error'
+    })
+  }, 
+  [ActionTypes.TRANSACTION_ERROR]({state}, msg: string) {
+    state.logEntries.push({
+      id: state.nextLogEntryId++, 
+      msg: "TRANSACTION_ERROR: " + msg, 
+      type: 'transaction-error'
+    })
+  }, 
+  [ActionTypes.NODE_SVG_CLICK]({state, commit, dispatch}, node: Node) {
     if(state.map.panning) {
       commit(MutationTypes.STOP_PANNING)
     } else {
       if(state.connectFrom !== undefined) {
         if(node !== state.connectFrom) {
-          dispatch(ActionTypes.CREATE_NEW_FLOW, {
+          dispatch(ActionTypes.CREATE_FLOW, {
             from: state.connectFrom, 
             into: node
           });
-          dispatch(ActionTypes.UI_ERROR, `Can't connect project to itself`) 
-        } 
+        } else {
+          dispatch(
+            ActionTypes.UI_ERROR, 
+            `No flow was created: Cannot connect node to itself`
+          ) 
+        }
         commit(MutationTypes.STOP_CONNECTING)
       } else {
         if(state.selectedNode === node) {
@@ -425,7 +423,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.FLOW_CLICK]({state, commit}, flow: Flow) {
+  [ActionTypes.FLOW_SVG_CLICK]({state, commit}, flow: Flow) {
     if(state.selectedFlow == flow) {
       commit(MutationTypes.OPEN_MENU)
     } else {
@@ -446,14 +444,14 @@ export const actions: ActionTree<State, State> = {
       } else if(state.selectedFlow !== undefined) {
         commit(MutationTypes.DESELECT_FLOW); 
       } else {
-        dispatch(ActionTypes.CREATE_NEW_NODE, {
+        dispatch(ActionTypes.CREATE_NODE, {
           x: state.map.mouse.x, 
           y: state.map.mouse.y
         }) 
       }
     }
   }, 
-  [ActionTypes.ONCHAIN_REMOVE_NODE]({}, _nodeId: string) {
+  [ActionTypes.COMMIT_REMOVE_NODE]({}, _nodeId: string) {
   }, 
   [ActionTypes.REMOVE_NODE]({state, commit}, nodeId: string) {
     for(let intoId in state.flows_from_into[nodeId]) {
@@ -464,5 +462,6 @@ export const actions: ActionTree<State, State> = {
     }
     commit(MutationTypes.REMOVE_NODE, nodeId)
   }, 
-  [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}
+  [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}, 
+  [ActionTypes.NEAR_LOGOUT]({}) {}, 
 }

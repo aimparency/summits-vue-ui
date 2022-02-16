@@ -3,19 +3,21 @@
     <h4> near profile </h4>
   </SideMenuHeader>
   <SideMenuContent class="near-profile">
-    <p>connection state: {{ $store.state.nearState }} </p>
+    <p>connection state: {{ $store.state.near.status }} </p>
+    <p v-if="$store.state.near.accountId">account: {{ $store.state.near.accountId }} </p>
+    <p v-else>no account in use</p>
     <p>
     <a :href="walletUrl">wallet link</a> <br/>
     <a :href="nodeUrl">node link</a> <br/>
     <a :href="helperUrl">helper link</a>
     </p>
-    <button>logout</button>
-    <button @click="requestSignIn">request sign in</button>
+    <button class='standard' @click="logout">logout</button>
+    <button class='standard' @click="requestSignIn">request sign in</button>
   </SideMenuContent>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent } from 'vue';
 
 import { ActionTypes } from '@/actions';
 
@@ -30,12 +32,6 @@ export default defineComponent({
     SideMenuHeader,
     SideMenuContent
   },
-  props: {
-    node: {
-      type: Object as PropType<Node>,
-      required: true
-    }, 
-  }, 
   computed: {
     walletUrl() : string {
       return nearConfig.walletUrl
@@ -51,6 +47,9 @@ export default defineComponent({
     requestSignIn() {
       this.$store.dispatch(ActionTypes.REQUEST_NEAR_SIGN_IN) 
     }, 
+    logout() {
+      this.$store.dispatch(ActionTypes.NEAR_LOGOUT)
+    }
   }
 });
 </script>

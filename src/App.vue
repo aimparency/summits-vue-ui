@@ -1,18 +1,21 @@
 <template>
   <GraphExplorer/>
   <SideMenu/>
+  <Log/>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
 import GraphExplorer from './components/GraphExplorer.vue';
 import SideMenu from './components/SideMenu.vue';
+import Log from './components/Log.vue';
 
 export default defineComponent({
   name: 'App',
   components: {
     GraphExplorer, 
-    SideMenu
+    SideMenu, 
+    Log
   }, 
   data() {
     return {

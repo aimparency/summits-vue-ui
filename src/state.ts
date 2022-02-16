@@ -1,10 +1,12 @@
-import { Node, Flow, NearState } from '@/types';
+import { Node, Flow, NearStatus, LogEntry } from '@/types';
 import { Vector2 } from 'three';
 
 export default interface State {
   nodes: {[id: string]: Node}, 
   flows_from_into: {[from_id: string]: {[into_id: string]: Flow}}, 
   flows_into_from: {[into_id: string]: {[from_id: string]: Flow}}, 
+  nextLogEntryId: number, 
+  logEntries: LogEntry[], 
 
   /** 
    * initial set of nodes and every node a user clicks. 
@@ -33,7 +35,11 @@ export default interface State {
     open: boolean, 
     showProfile: boolean, 
   }, 
-  nearState: NearState
+  near: {
+    status: NearStatus, 
+    accountId: string | undefined
+  }, 
+  homeUnset: boolean
 }
 
 export function getDefault() : State {
@@ -41,6 +47,8 @@ export function getDefault() : State {
     nodes: {}, 
     flows_from_into: {}, 
     flows_into_from: {},
+    nextLogEntryId: 0, 
+    logEntries: [], 
     map: {
       mouse: new Vector2(0,0), 
       offset: new Vector2(0,0),
@@ -52,6 +60,10 @@ export function getDefault() : State {
       open: true, 
       showProfile: true
     }, 
-    nearState: 'disconnected'
+    near: {
+      status: 'disconnected', 
+      accountId: undefined
+    }, 
+    homeUnset: false
   }
 }

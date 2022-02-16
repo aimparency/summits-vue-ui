@@ -9,7 +9,7 @@
       r='50'/>
     <g :transform="transform">
       <FlowSVG v-for="flow in flows" 
-        :key="`${flow.from_id}x${flow.into_id}`"
+        :key="`${flow.id.from}x${flow.id.into}`"
         :flow="flow"/>
       <Connector v-if="$store.state.connectFrom !== undefined"/>
       <NodeSVG v-for="node in nodes" 

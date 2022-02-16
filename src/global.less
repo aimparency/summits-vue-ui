@@ -1,7 +1,11 @@
 @background: #613339;  
 @foreground: #dfefff;
 
-button {
+@danger: #c80; 
+@error: #e02; 
+@info: #59e; 
+
+button.standard {
   box-sizing: border-box; 
   border: none; 
   color: @background; 
@@ -13,7 +17,7 @@ button {
   cursor: pointer; 
 }
 
-input, textarea {
+input.standard, textarea.standard {
   color: @foreground; 
   box-sizing: border-box;
   width: 100%; 

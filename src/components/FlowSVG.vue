@@ -50,7 +50,7 @@ export default defineComponent({
   },
   methods: {
     select() {
-      this.$store.dispatch(ActionTypes.FLOW_CLICK, this.flow)
+      this.$store.dispatch(ActionTypes.SELECT_FLOW, this.flow)
     }
   }
 });

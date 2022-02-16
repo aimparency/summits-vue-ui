@@ -3,6 +3,7 @@ export interface Node {
   title: string, 
   notes: string, 
   updatePending: boolean, 
+  pendingTransactions: number, 
   deposit: number, 
   x: number, 
   y: number, 
@@ -16,10 +17,30 @@ export interface Node {
    */
   subLevel: number, 
   unpublished: boolean, 
-  changes: {
-    title?: string, 
-    notes?: string, 
-    deposit?: number
+  changes: NodeChanges
+}
+
+export interface NodeChanges {
+  title?: string, 
+  notes?: string, 
+  deposit?: number
+}
+
+export function createDefaultNode() : Node {
+  return {
+    id: '', 
+    x: 0,
+    y: 0, 
+    r: 1, 
+    title: "", 
+    notes: "", 
+    unpublished: false, 
+    updatePending: false, 
+    pendingTransactions: 0, 
+    changes: {
+    }, 
+    deposit: 1, 
+    subLevel: -1
   }
 }
 
@@ -43,4 +64,26 @@ export interface Flow {
   dy: number
 }
 
-export type NearState = 'disconnected' | 'connecting' | 'connected' | 'logging-in' | 'logged-in'
+export function createDefaultFlow() : Flow {
+  return {
+    id: {
+      from: '', 
+      into: ''
+    }, 
+    dx: 0, 
+    dy: 0, 
+    updatePending: false, 
+    notes: "", 
+    share: Math.random() * 0.25 + 0.01, 
+    changes: {}, 
+    unpublished: false
+  }
+}
+
+export type NearStatus = 'disconnected' | 'connecting' | 'connected' | 'logging-in' | 'logged-in'
+
+export interface LogEntry {
+  id: number, 
+  msg: string, 
+  type: string
+}

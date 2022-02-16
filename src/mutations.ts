@@ -1,8 +1,10 @@
 import State from './state' 
 import { MutationTree } from 'vuex'
 
-import { Node, Flow, NearState } from './types'
+import { Node, Flow, NearStatus, createDefaultNode } from './types'
 import { Vector2 } from 'three'
+
+import * as Messages from '@/messages'
 
 export enum MutationTypes {
   UPDATE_MOUSE_MAP_POSITION = 'UPDATE_MOUSE_MAP_POSITION', 
@@ -33,6 +35,16 @@ export enum MutationTypes {
   TOGGLE_MENU = 'TOGGLE_MENU', 
 
   SET_NEAR_STATE = 'SET_NEAR_STATE', 
+
+  SET_NODE_DATA = 'SET_NODE_DATA', 
+  SET_SUB_LEVEL = 'SET_SUB_LEVEL', 
+
+  APPLY_CHANGES = 'APPLY_CHANGES', 
+
+  SET_PUBLISHED = 'SET_PUBLISHED', 
+
+  INCREASE_PENDING_TRANSACTIONS = 'INCREASE_PENDING_TRANSACTIONS', 
+  DECREASE_PENDING_TRANSACTIONS = 'DECREASE_PENDING_TRANSACTIONS', 
 }
 
 export const mutations: MutationTree<State> = {
@@ -98,7 +110,7 @@ export const mutations: MutationTree<State> = {
       payload.flow.changes.notes = payload.newNotes
     }
   }, 
-  [MutationTypes.RESET_NODE_CHANGES](state, node: Node) {
+  [MutationTypes.RESET_NODE_CHANGES](_, node: Node) {
     node.changes = {}
   }, 
   [MutationTypes.OPEN_MENU](state) {
@@ -116,7 +128,55 @@ export const mutations: MutationTree<State> = {
   [MutationTypes.TOGGLE_MENU](state) {
     state.menu.open = !state.menu.open
   }, 
-  [MutationTypes.SET_NEAR_STATE](state, newNearState: NearState) {
-    state.nearState = newNearState
+  [MutationTypes.SET_NEAR_STATE](state, newNearState: NearStatus) {
+    state.near.status = newNearState
+  }, 
+  [MutationTypes.SET_NODE_DATA](state, nodeView: Messages.NodeView) {
+    console.log("about to store node data") 
+    if(nodeView.id in state.nodes) {
+      Object.assign(state.nodes[nodeView.id], {
+        title: nodeView.title, 
+        notes: nodeView.notes, 
+        deposit: nodeView.deposit, 
+        updatePending: false, 
+        r: nodeView.deposit
+      }) 
+    } else {
+      console.log("creating new node") 
+      state.nodes[nodeView.id] = {
+        ...createDefaultNode(), 
+        ...nodeView, 
+        r: nodeView.deposit
+      }
+    }
+  }, 
+  [MutationTypes.SET_SUB_LEVEL](state, payload: {nodeId: string, level: number}) {
+    console.log("changing sublevel of", payload.nodeId)
+    state.nodes[payload.nodeId].subLevel = payload.level
+  }, 
+  [MutationTypes.APPLY_CHANGES](state, nodeId: string) {
+    let node = state.nodes[nodeId]
+    if(node) {
+      Object.assign(node, node.changes)
+      node.changes = {}
+    }
+  }, 
+  [MutationTypes.SET_PUBLISHED](state, nodeId: string) {
+    let node = state.nodes[nodeId]
+    if(node) {
+      node.unpublished = false
+    }
+  }, 
+  [MutationTypes.INCREASE_PENDING_TRANSACTIONS](state, nodeId: string) {
+    let node = state.nodes[nodeId]
+    if(node) {
+      node.pendingTransactions += 1
+    }
+  },
+  [MutationTypes.DECREASE_PENDING_TRANSACTIONS](state, nodeId: string) {
+    let node = state.nodes[nodeId]
+    if(node) {
+      node.pendingTransactions -= 1
+    }
   }
 }

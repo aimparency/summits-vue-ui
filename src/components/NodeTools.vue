@@ -19,6 +19,7 @@
     transform="translate(-0.8 -0.8)"
     @click.stop="$emit('remove')">
     <circle
+      :class="{confirm: confirmRemove}"
       cx="0" 
       cy="0" 
       r="0.4"
@@ -34,18 +35,37 @@ export default defineComponent({
   emits: [
     'connect', 
     'remove'
-  ]
+  ], 
+  data() {
+    return {
+      confirmRemove: false
+    }
+  }, 
+  methods: {
+    remove() {
+      if(this.confirmRemove) {
+        this.$emit('remove')
+      } else {
+        this.confirmRemove = true
+      }
+    }
+  }
 });
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
+@import '~@/global.less';
+
 .tool{
   fill: #888; 
   cursor: pointer; 
   circle {
     stroke: #bbb; 
     stroke-width: 0.025; 
+    &.confirm {
+      fill: @danger; 
+    }
   }
 }
 .connect{
