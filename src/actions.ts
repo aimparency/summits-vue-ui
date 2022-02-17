@@ -7,7 +7,9 @@ import { Flow, Node, createDefaultFlow, createDefaultNode } from '@/types';
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
 
-const LOG_VIEW_DURATION = 12000
+const MAX_SUB_LEVEL = 2;  
+
+let recalc_counter = 0
 
 export enum ActionTypes {
   LOAD_NODE = 'LOAD_NODE',
@@ -313,18 +315,24 @@ export const actions: ActionTree<State, State> = {
         }
       }
     }
-    let newX = node.x * payload.damping
-    let newY = node.y * payload.damping
-    const wf = 1 / totalWeight * (1 - payload.damping) 
+    let newX = 0
+    let newY = 0
+    const wf = 1 / totalWeight 
     for(let reference of references) {
       const f = reference.weight * wf
       newX += f * reference.x
       newY += f * reference.y
     }
-    node.x = newX
-    node.y = newY
+
+    let squareDistance = Math.pow(node.x - newX, 2) + Math.pow(node.y - newY, 2)
+
+    node.x = node.x * payload.damping + newX * (1 - payload.damping) 
+    node.y = node.y * payload.damping + newY * (1 - payload.damping) 
+
+    console.log(recalc_counter++)
+
     const increasedDamping = payload.damping + 0.10
-    if(increasedDamping < 0.95) {
+    if(increasedDamping < 0.95 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
       for(let nId of neighborIds) {
         dispatch(ActionTypes.RECALC_NODE_POSITION, {
           nodeId: nId, 
@@ -407,8 +415,7 @@ export const actions: ActionTree<State, State> = {
     state.logEntries.push({
       id: state.nextLogEntryId++, 
       msg: p.msg, 
-      type: p.type, 
-      eol: Date.now() + LOG_VIEW_DURATION
+      type: p.type
     })
   }, 
   [ActionTypes.NODE_SVG_CLICK]({state, commit, dispatch}, node: Node) {
@@ -433,7 +440,11 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.SELECT_NODE]({state, commit}, node: Node) {
+  [ActionTypes.SELECT_NODE]({state, dispatch, commit}, node: Node) {
+    if(node.subLevel < MAX_SUB_LEVEL) {
+      node.subLevel = MAX_SUB_LEVEL 
+      dispatch(ActionTypes.LOAD_NODE, node.id) 
+    }
     commit(MutationTypes.OPEN_MENU)
     if(state.selectedFlow) {
       commit(MutationTypes.DESELECT_FLOW) 

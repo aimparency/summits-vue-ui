@@ -1,6 +1,6 @@
 <template>
   <g class="node"
-    :transform="`translate(${node.x} ${node.y})`">
+    :style="{transform: `translate(${node.x}px, ${node.y}px)`}">
     <g :transform="`scale(${node.changes.deposit || node.r})`">
       <circle 
         :class="{selected, loading, placeholder}"
@@ -10,12 +10,12 @@
         r="1"
         @click.stop='select'
       />
-      <!--text
+      <text
         y="-1.2"
         x="0"
         class="label debug">
         {{node.subLevel}}
-      </text-->
+      </text>
 
       <text
         v-if="!placeholder" 
@@ -123,6 +123,7 @@ export default defineComponent({
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
 .node {
+  transition: transform 0.3s; 
   circle {
     cursor: pointer; 
     transition: stroke-dasharray;  

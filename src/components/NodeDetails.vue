@@ -2,7 +2,9 @@
   <SideMenuHeader>
     <h4> project details </h4>
   </SideMenuHeader>
-  <SideMenuContent class="node-details">
+  <SideMenuContent 
+    @keypress="keypress"
+    class="node-details">
     <h3> edit </h3>
     <input 
       ref='title'
@@ -146,6 +148,11 @@ export default defineComponent({
     }, 
   }, 
   methods: {
+    keypress(e: KeyboardEvent) {
+      if(e.key == 'Enter' && this.dirty) {
+        this.commit()
+      }
+    }, 
     updateDepositSliderOrigin(){
       this.sliderOrigin.deposit = this.deposit
     }, 

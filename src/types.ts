@@ -89,7 +89,6 @@ export interface LogEntry {
   id: number, 
   msg: string, 
   type: string
-  eol: number
 }
 
 export function createDefaultEntry() : LogEntry {
@@ -97,6 +96,5 @@ export function createDefaultEntry() : LogEntry {
     id: 0, 
     msg: "", 
     type: "info", 
-    eol: Date.now() + 12000
   }
 }
