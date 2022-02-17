@@ -5,6 +5,7 @@
   <SideMenuContent class="node-details">
     <h3> edit </h3>
     <input 
+      ref='title'
       class='standard title' 
       :value="title" 
       placeholder="<node title>"
@@ -24,15 +25,22 @@
       :value='deposit'
       @drag-end='updateDepositSliderOrigin'
       @update='updateDeposit'/>
-    <button class='standard' v-if='dirty' @click="reset">reset</button>
-    <button class='standard' v-if='dirty' @click="commit">commit</button>
+    <div v-if="node.pendingTransactions > 0" class="spinner">pending transactions...</div>
+    <div v-else-if='dirty'>
+      <button class='standard' v-if='dirty' @click="reset">reset</button>
+      <button class='standard' v-if='dirty' @click="commit">commit</button>
+    </div>
+    <button v-else 
+      class='standard' 
+      @blur='restoreRemove'
+      @click="remove">remove</button>
     <h3 v-if="flows_from.length > 0"> incoming flows </h3>
     <div 
       class="flow" 
       v-for="pair, i in flows_from" 
       @click="flowClick(pair.flow)" 
       :key="i">
-      {{ pair.node.title || `node ${pair.node.id.substring(0,5)}...`}} <br/>
+      {{ pair.node.title || "<unnamed>"}} <br/>
       share: {{ pair.flow.share }}
     </div>
     <h3 v-if="flows_into.length > 0"> outgoing flows </h3>
@@ -41,7 +49,7 @@
       v-for="pair, i in flows_into" 
       @click="flowClick(pair.flow)" 
       :key="i">
-      {{ pair.node.title || `node ${pair.node.id.substring(0,5)}...`}} <br/>
+      {{ pair.node.title || "<unnamed>"}} <br/>
       share: {{ pair.flow.share }}
     </div>
   </SideMenuContent>
@@ -69,8 +77,9 @@ export default defineComponent({
   data() {
     return {
       sliderOrigin: {
-        deposit: this.node.deposit
-      }
+        deposit: 0
+      }, 
+      removeConfirm: false // TBD
     }
   }, 
   props: {
@@ -78,6 +87,12 @@ export default defineComponent({
       type: Object as PropType<Node>,
       required: true
     }, 
+  }, 
+  updated() {
+    this.refresh()
+  }, 
+  mounted() {
+    this.refresh()
   }, 
   computed: {
     dirty() : boolean {
@@ -87,13 +102,25 @@ export default defineComponent({
       ) 
     }, 
     title() : string {
-      return this.node.changes.title || this.node.title
+      if(this.node.changes.title !== undefined) {
+        return this.node.changes.title 
+      } else {
+        return this.node.title
+      }
     }, 
     notes() : string {
-      return this.node.changes.notes || this.node.notes
+      if(this.node.changes.notes !== undefined) {
+        return this.node.changes.notes 
+      } else {
+        return this.node.notes
+      }
     }, 
     deposit() : number {
-      return this.node.changes.deposit || this.node.deposit
+      if(this.node.changes.deposit !== undefined) {
+        return this.node.changes.deposit 
+      } else {
+        return this.node.deposit
+      }
     }, 
     flows_from() : {flow: Flow, node: Node}[] {
       let flows = this.$store.state.flows_into_from[this.node.id] 
@@ -151,6 +178,16 @@ export default defineComponent({
     }, 
     flowClick(flow: Flow) {
       this.$store.dispatch(ActionTypes.SELECT_FLOW, flow)
+    }, 
+    refresh() {
+      this.focusTitle()
+      this.resetSliderOrigin()
+    }, 
+    focusTitle() {
+      (this.$refs.title as HTMLInputElement).focus()
+    }, 
+    resetSliderOrigin() {
+      this.sliderOrigin.deposit = this.deposit
     }
   }
 });
@@ -171,11 +208,11 @@ h4 {
   color: @foreground; 
   .title{
     font-size: 1.5rem;
-    margin-bottom:0.5rem; 
+    margin:0.5rem 0rem; 
   }
   .notes {
     height: 10em; 
-    margin-bottom:0.5rem; 
+    margin: 0.5rem 0rem; 
   }
   .flow {
     background-color: tint(@background, 20%); 
@@ -185,6 +222,9 @@ h4 {
     margin-bottom: 0.5em; 
     user-select: none; 
     cursor: pointer; 
+  }
+  button {
+    margin: 1rem 0.2rem; 
   }
 }
 </style>

@@ -1,7 +1,14 @@
 import State from './state' 
 import { MutationTree } from 'vuex'
 
-import { Node, Flow, NearStatus, createDefaultNode } from './types'
+import { 
+  Node, 
+  Flow, 
+  FlowId, 
+  NearStatus, 
+  createDefaultNode 
+} from './types'
+
 import { Vector2 } from 'three'
 
 import * as Messages from '@/messages'
@@ -22,6 +29,8 @@ export enum MutationTypes {
   RESET_NODE_CHANGES = 'RESET_NODE_CHANGES', 
 
   CHANGE_FLOW_NOTES = 'CHANGE_FLOW_NOTES', 
+  CHANGE_FLOW_SHARE = 'CHANGE_FLOW_SHARE', 
+  RESET_FLOW_CHANGES = 'RESET_FLOW_CHANGES', 
 
   OPEN_MENU = 'OPEN_MENU', 
 
@@ -39,12 +48,16 @@ export enum MutationTypes {
   SET_NODE_DATA = 'SET_NODE_DATA', 
   SET_SUB_LEVEL = 'SET_SUB_LEVEL', 
 
-  APPLY_CHANGES = 'APPLY_CHANGES', 
+  APPLY_NODE_CHANGES = 'APPLY_NODE_CHANGES', 
+  APPLY_FLOW_CHANGES = 'APPLY_FLOW_CHANGES', 
 
   SET_PUBLISHED = 'SET_PUBLISHED', 
 
-  INCREASE_PENDING_TRANSACTIONS = 'INCREASE_PENDING_TRANSACTIONS', 
-  DECREASE_PENDING_TRANSACTIONS = 'DECREASE_PENDING_TRANSACTIONS', 
+  INCREASE_NODE_PENDING_TRANSACTIONS = 'INCREASE_NODE_PENDING_TRANSACTIONS', 
+  DECREASE_NODE_PENDING_TRANSACTIONS = 'DECREASE_NODE_PENDING_TRANSACTIONS', 
+
+  INCREASE_FLOW_PENDING_TRANSACTIONS = 'INCREASE_FLOW_PENDING_TRANSACTIONS', 
+  DECREASE_FLOW_PENDING_TRANSACTIONS = 'DECREASE_FLOW_PENDING_TRANSACTIONS', 
 }
 
 export const mutations: MutationTree<State> = {
@@ -62,7 +75,6 @@ export const mutations: MutationTree<State> = {
   }, 
   [MutationTypes.SELECT_NODE](state: State, node: Node) {
     state.selectedNode = node; 
-    state.menu.showProfile = false; 
   }, 
   [MutationTypes.STOP_CONNECTING](state: State) {
     delete state.connectFrom
@@ -101,6 +113,13 @@ export const mutations: MutationTree<State> = {
       delete payload.node.changes.deposit
     } else {
       payload.node.changes.deposit = payload.newDeposit
+    }
+  }, 
+  [MutationTypes.CHANGE_FLOW_SHARE](_state, payload: {flow: Flow, newShare: number}) {
+    if(payload.flow.share === payload.newShare) {
+      delete payload.flow.changes.share 
+    } else {
+      payload.flow.changes.share = payload.newShare
     }
   }, 
   [MutationTypes.CHANGE_FLOW_NOTES](_state, payload: {flow: Flow, newNotes: string}) {
@@ -154,7 +173,15 @@ export const mutations: MutationTree<State> = {
     console.log("changing sublevel of", payload.nodeId)
     state.nodes[payload.nodeId].subLevel = payload.level
   }, 
-  [MutationTypes.APPLY_CHANGES](state, nodeId: string) {
+  [MutationTypes.APPLY_FLOW_CHANGES](state, flowId: FlowId) {
+    let flow = state.flows_from_into[flowId.from][flowId.into]
+    
+    if(flow) {
+      Object.assign(flow, flow.changes)
+      flow.changes = {}
+    }
+  }, 
+  [MutationTypes.APPLY_NODE_CHANGES](state, nodeId: string) {
     let node = state.nodes[nodeId]
     
     if(node) {
@@ -171,16 +198,28 @@ export const mutations: MutationTree<State> = {
       node.unpublished = false
     }
   }, 
-  [MutationTypes.INCREASE_PENDING_TRANSACTIONS](state, nodeId: string) {
+  [MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS](state, flowId: FlowId) {
+    let flow = state.flows_from_into[flowId.from][flowId.into]
+    if(flow) {
+      flow.pendingTransactions += 1
+    }
+  },
+  [MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS](state, flowId: FlowId) {
+    let flow = state.flows_from_into[flowId.from][flowId.into]
+    if(flow) {
+      flow.pendingTransactions -= 1
+    }
+  },
+  [MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS](state, nodeId: string) {
     let node = state.nodes[nodeId]
     if(node) {
       node.pendingTransactions += 1
     }
   },
-  [MutationTypes.DECREASE_PENDING_TRANSACTIONS](state, nodeId: string) {
+  [MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS](state, nodeId: string) {
     let node = state.nodes[nodeId]
     if(node) {
       node.pendingTransactions -= 1
     }
-  }
+  },
 }

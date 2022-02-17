@@ -13,7 +13,6 @@ import { ActionTypes } from './actions';
 import { MutationTypes } from './mutations'; 
 
 import * as Messages from '@/messages'; 
-import { Action } from "near-api-js/lib/transaction";
 
 export default function createNearLink () {
 
@@ -125,16 +124,16 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
 
       console.log("create node payload:", nodeCreation)
 
-      store.commit(MutationTypes.INCREASE_PENDING_TRANSACTIONS, nodeCreation.id)
+      store.commit(MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS, nodeCreation.id)
       contract.create_node(
         nodeCreation 
       ).then(
         (result: any) => {
           console.log("result of create_node call asd", result)
           if('Ok' in result) {
-            store.commit(MutationTypes.APPLY_CHANGES, nodeCreation.id)
+            store.commit(MutationTypes.APPLY_NODE_CHANGES, nodeCreation.id)
             store.commit(MutationTypes.SET_PUBLISHED, nodeCreation.id) 
-            store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeCreation.id)
+            store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeCreation.id)
             if(store.state.homeUnset) {
               contract.set_home_node_id({
                 id: nodeCreation.id
@@ -145,6 +144,8 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
                       ActionTypes.TRANSACTION_ERROR, 
                       `Could not set home node id. ${result.Err}`
                     )
+                  } else {
+                    store.state.homeUnset = false
                   }
                 },
                 (err : any) => {
@@ -160,60 +161,80 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
               ActionTypes.TRANSACTION_ERROR, 
               `failed to create node. ${result.Err}`
             )
-            store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeCreation.id)
+            store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeCreation.id)
           }
         },
         (err: any) => {
           store.dispatch(ActionTypes.NEAR_ERROR, err)
-          store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeCreation.id)
+          store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeCreation.id)
         }
       ) 
     } else if (action.type === ActionTypes.ONCHAIN_CHANGE_NODE) {
       let nodeChange = action.payload as Messages.NodeChange
-      store.commit(MutationTypes.INCREASE_PENDING_TRANSACTIONS, nodeChange.id)
+      store.commit(MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS, nodeChange.id)
       contract.change_node(
         nodeChange
       ).then(
         (result: any) => {
           if('Ok' in result) {
-            console.log("change ok") 
-            let payload = {
-              nodeId: nodeChange.id, 
-              damping: 0.7
-            }
-            console.log(payload) 
-            store.commit(MutationTypes.APPLY_CHANGES, nodeChange.id)
+            store.commit(MutationTypes.APPLY_NODE_CHANGES, nodeChange.id)
             if(nodeChange.changes.deposit) {
-              console.log("deposit ...") 
-              store.dispatch(ActionTypes.RECALC_NODE_POSITION, payload)
+              store.dispatch(ActionTypes.RECALC_NODE_POSITION, {
+                nodeId: nodeChange.id, 
+                damping: 0.7
+              })
             }
-            store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeChange.id)
+            store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeChange.id)
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, result.Err)
-            store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeChange.id)
+            store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeChange.id)
           }
         }, 
         (err: any) => {
           store.dispatch(ActionTypes.NEAR_ERROR, err)
-          store.commit(MutationTypes.DECREASE_PENDING_TRANSACTIONS, nodeChange.id)
+          store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeChange.id)
         }
       )
     } else if (action.type === ActionTypes.ONCHAIN_CREATE_FLOW) {
+      let flowCreation = action.payload as Messages.FlowCreation
+      store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
+      console.log(flowCreation) 
       contract.create_flow(
-        action.payload
+        flowCreation 
       ).then(
         (result: any) => {
           if('Ok' in result) {
-            //set stuff
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, result.Err) 
           }
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
         }, 
         (err: any) => {
           store.dispatch(ActionTypes.NEAR_ERROR, err)
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
         }
       )
-      // create_flow
+    } else if (action.type === ActionTypes.ONCHAIN_CHANGE_FLOW) {
+      let flowChange = action.payload as Messages.FlowChange
+      console.log("flow change:", flowChange) 
+      store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+      console.log("flow change:", flowChange) 
+      contract.change_flow(
+        flowChange
+      ).then(
+        (result: any) => {
+          if('Ok' in result) {
+            store.commit(MutationTypes.APPLY_FLOW_CHANGES, flowChange.id)
+          } else {
+            store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to change flow." + result.Err)
+          }
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+        }, 
+        (err: any) => {
+          store.dispatch(ActionTypes.NEAR_ERROR, "failed to change flow." + err)
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+        }
+      )
     } else if(action.type === ActionTypes.COMMIT_REMOVE_NODE) {
       contract.remove_node({
         id: action.payload

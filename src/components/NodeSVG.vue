@@ -10,12 +10,12 @@
         r="1"
         @click.stop='select'
       />
-      <text
+      <!--text
         y="-1.2"
         x="0"
         class="label debug">
         {{node.subLevel}}
-      </text>
+      </text-->
 
       <text
         v-if="!placeholder" 

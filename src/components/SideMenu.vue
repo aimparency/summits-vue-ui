@@ -5,15 +5,15 @@
     @click.stop=""
     @mousedown.stop=""
   >
-    <NearProfile
-      v-if="$store.state.menu.showProfile"
-      />
     <NodeDetails 
-      v-else-if="$store.state.selectedNode !== undefined" 
+      v-if="$store.state.selectedNode !== undefined" 
       :node="$store.state.selectedNode"/>
     <FlowDetails 
       v-else-if="$store.state.selectedFlow !== undefined"
       :flow="$store.state.selectedFlow"/>
+    <NearProfile
+      v-else-if="$store.state.menu.showProfile"
+      />
     <SearchBar v-else/>
   </div>
 </template>
@@ -45,7 +45,7 @@ export default defineComponent({
     classes() : {} {
       return {
         [this.style]: true,
-        open: this.$store.state.menu.open
+        open: this.$store.state.menu.open 
       }
     }
   }, 
@@ -72,6 +72,8 @@ export default defineComponent({
 .side-menu{ 
   position: absolute; 
   background-color: @background; 
+  border: 0.2rem solid tint(@background, 20%);
+  border-right: none; 
   box-sizing: border-box;
   text-align: left; 
   left: calc(100vw - 3.25rem); 
@@ -81,6 +83,7 @@ export default defineComponent({
   max-height: calc(100vh 1em); 
   top: 1em;
   margin: 0; 
+  box-shadow: 0 0 4em black; 
   &.full{
     width: 100vw; 
     &.open {

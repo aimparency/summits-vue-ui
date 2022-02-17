@@ -1,13 +1,4 @@
-import { FlowId } from './types'
-
-export interface NodeChange {
-  id: string, 
-  changes: {
-    title: string | undefined, 
-    notes: string | undefined,  
-    deposit: number | undefined
-  }
-}
+import { NodeChanges, FlowChanges, FlowId } from './types'
 
 export interface NodeCreation {
   id: string, 
@@ -16,12 +7,22 @@ export interface NodeCreation {
   deposit: number
 }
 
+export interface NodeChange {
+  id: string, 
+  changes: NodeChanges 
+}
+
 export interface FlowCreation {
   id: FlowId, 
   dx: number, 
   dy: number, 
   notes: string, 
   share: number
+}
+
+export interface FlowChange {
+  id: FlowId, 
+  changes: FlowChanges
 }
 
 export interface NodeRemoval {

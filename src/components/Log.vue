@@ -56,6 +56,8 @@ export default defineComponent({
   pointer-events: none; 
   box-sizing: border-box; 
   .wrapper {
+    top: 0; 
+    transition: top 0.3s ease-in-out; 
     margin: 0.5rem; 
     .entry{
       pointer-events: all; 

@@ -1,3 +1,4 @@
+
 export interface Node {
   id: string, 
   title: string, 
@@ -49,19 +50,22 @@ export interface FlowId {
   into: string, 
 }
 
+
 export interface Flow {
   id: FlowId, 
-  // general 
   share: number, 
   notes: string, 
-  // local
-  updatePending: boolean, 
-  unpublished: boolean, 
-  changes: {
-    notes?: string
-  }, 
   dx: number, 
   dy: number
+  changes: FlowChanges,
+  pendingTransactions: number
+}
+
+export interface FlowChanges {
+  notes?: string, 
+  share?: number,
+  dx?: number, 
+  dy?: number
 }
 
 export function createDefaultFlow() : Flow {
@@ -72,11 +76,10 @@ export function createDefaultFlow() : Flow {
     }, 
     dx: 0, 
     dy: 0, 
-    updatePending: false, 
     notes: "", 
-    share: Math.random() * 0.25 + 0.01, 
+    share: 0.1, 
     changes: {}, 
-    unpublished: false
+    pendingTransactions: 0,
   }
 }
 
@@ -86,4 +89,14 @@ export interface LogEntry {
   id: number, 
   msg: string, 
   type: string
+  eol: number
+}
+
+export function createDefaultEntry() : LogEntry {
+  return {
+    id: 0, 
+    msg: "", 
+    type: "info", 
+    eol: Date.now() + 12000
+  }
 }

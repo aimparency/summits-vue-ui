@@ -41,7 +41,7 @@ export default defineComponent({
 .container {
   overflow: hidden; 
   .side-menu-content{
-    padding: 0.5rem; 
+    padding: 0 0.5rem; 
     color: @foreground; 
     text-align: center;
     input{

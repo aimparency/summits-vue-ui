@@ -3,13 +3,34 @@
     <h4> flow details </h4>
   </SideMenuHeader>
   <SideMenuContent class='flow-details'>
-    <h3> {{ fromTitle || "<from project>"}} -> {{ intoTitle || "<into project>" }} </h3>
-    <p> share: {{ flow.share }} </p>
+    <h3>
+      <button 
+        @click='selectFromNode'
+        class='standard'> {{ fromTitle }} </button> 
+      &#129042; 
+      <button 
+        @click='selectIntoNode'
+        class='standard'> {{ intoTitle }} </button>
+    </h3>
+    <Slider 
+      name='share'
+      left='0'
+      right='1'
+      :from='0'
+      :to='1'
+      :value='share'
+      @update='updateShare'/>
     <textarea 
       class='standard notes' 
-      :value="flow.notes" 
+      :value="notes" 
       placeholder="<notes>"
       @input="updateNotes"/>
+    <div v-if="flow.pendingTransactions > 0" class='spinner'>pending transactions ...</div>
+    <div v-else>
+      <button class='standard' v-if='dirty' @click="reset">reset</button>
+      <button class='standard' v-if='dirty' @click="commit">commit</button>
+      <button class='standard' @click="remove">remove</button>
+    </div>
   </SideMenuContent>
 </template>
 
@@ -17,17 +38,20 @@
 import { defineComponent, PropType } from 'vue';
 
 import { MutationTypes } from '@/mutations';
+import { ActionTypes } from '@/actions';
 
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
+import Slider from './Slider.vue'; 
 
-import { Flow } from '@/types';
+import { Flow, Node } from '@/types';
 
 export default defineComponent({
   name: 'FlowDetails',
   components: {
     SideMenuHeader,
-    SideMenuContent
+    SideMenuContent, 
+    Slider
   },
   props: {
     flow: {
@@ -36,17 +60,34 @@ export default defineComponent({
     }
   }, 
   computed: {
+    dirty() : boolean {
+      return Object.keys(this.flow.changes).length > 0 
+    }, 
+    from() : Node | undefined {
+      return this.$store.state.nodes[this.flow.id.from];
+    }, 
+    into() : Node | undefined {
+      return this.$store.state.nodes[this.flow.id.into]; 
+    }, 
     fromTitle() : string | undefined {
-      const node = this.$store.state.nodes[this.flow.id.from];
-      if(node !== undefined) {
-        return node.title
+      if(this.from) {
+        return this.from.title || "<unnamed>" 
+      } else {
+        return "<unloaded>"
       }
     }, 
     intoTitle() : string | undefined {
-      const node = this.$store.state.nodes[this.flow.id.into]; 
-      if(node !== undefined) {
-        return node.title
-      } 
+      if(this.into) {
+        return this.into.title || "<unnamed>"
+      } else {
+        return "<unloaded>"
+      }
+    }, 
+    notes() : string {
+      return this.flow.changes.notes || this.flow.notes
+    }, 
+    share() : number {
+      return this.flow.changes.share || this.flow.share
     }
   }, 
   methods: {
@@ -56,8 +97,30 @@ export default defineComponent({
 
       this.$store.commit(MutationTypes.CHANGE_FLOW_NOTES, {
         flow: this.flow, 
-        notes: (<HTMLInputElement>e.target).value
+        newNotes: (<HTMLInputElement>e.target).value
       })
+    }, 
+    updateShare(v: number) {
+      this.$store.commit(MutationTypes.CHANGE_FLOW_SHARE, {
+        flow: this.flow, 
+        newShare: v
+      })
+    },
+    reset() {
+      this.$store.commit(MutationTypes.RESET_FLOW_CHANGES, this.flow)
+    }, 
+    commit() {
+      this.$store.dispatch(ActionTypes.COMMIT_FLOW, this.flow)
+    }, 
+    selectFromNode() {
+      if(this.from) {
+        this.$store.dispatch(ActionTypes.NODE_SVG_CLICK, this.from)
+      }
+    }, 
+    selectIntoNode() {
+      if(this.into) {
+        this.$store.dispatch(ActionTypes.NODE_SVG_CLICK, this.into)
+      }
     }
   }
 });
@@ -70,6 +133,9 @@ export default defineComponent({
 .node-details{
   color: @foreground; 
   text-align: center;
+  h3 {
+    margin: 1rem 0rem; 
+  }
   h4 {
     font-size: 1rem;
     text-align: center;
@@ -79,6 +145,10 @@ export default defineComponent({
   }
   .notes {
     height: 10em; 
+    margin: 0.5rem 0rem; 
+  }
+  button {
+    margin: 1rem 0.2rem; 
   }
 }
 </style>

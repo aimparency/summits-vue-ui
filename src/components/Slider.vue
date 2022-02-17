@@ -132,6 +132,7 @@ export default defineComponent({
   background-color: shade(@background, 20%);
   border-radius: @roundsize;
   padding: 0.9rem 0 1.5rem 0;
+  margin: 0.5rem 0rem; 
   .bar {
     position: relative;
     width: calc(100% - @dotsize);

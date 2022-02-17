@@ -7,6 +7,8 @@ import { Flow, Node, createDefaultFlow, createDefaultNode } from '@/types';
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
 
+const LOG_VIEW_DURATION = 12000
+
 export enum ActionTypes {
   LOAD_NODE = 'LOAD_NODE',
   LOAD_NEIGHBOR_NODE = 'LOAD_NEIGHBOR_NODE',
@@ -31,17 +33,17 @@ export enum ActionTypes {
   // Flow actions
   CREATE_FLOW = 'CREATE_FLOW', 
 
-
   COMMIT_FLOW = 'COMMIT_FLOW', 
   ONCHAIN_CREATE_FLOW = 'ONCHAIN_CREATE_FLOW', 
-  ONCHAIN_CHANGE_FLOW = 'ONCAHIN_CHANGE_FLOW', 
+  ONCHAIN_CHANGE_FLOW = 'ONCHAIN_CHANGE_FLOW', 
 
   COMMIT_REMOVE_FLOW = 'COMMIT_REMOVE_FLOW', 
   REMOVE_FLOW = 'REMOVE_FLOW', 
 
   CREATE_MISSING_NODES_AND_SET_FLOW_DATA = 'CREATE_MISSING_NODES_AND_SET_FLOW_DATA',
 
-  //
+  // LogEntries
+  LOG = 'LOG',
   UI_ERROR = 'UI_ERROR', 
   NEAR_ERROR = 'NEAR_ERROR', 
   TRANSACTION_ERROR = 'TRANSACTION_ERROR', 
@@ -77,7 +79,7 @@ function get_flow(state: State, fromId: string, intoId: string) : Flow | undefin
   }
 }
 
-function set_flow(state: State, flow: Flow) {
+function set_flow_and_return_proxy(state: State, flow: Flow) {
   let proxy = set_flow_in_dict(
     state.flows_from_into, 
     flow.id.from, 
@@ -90,6 +92,7 @@ function set_flow(state: State, flow: Flow) {
     flow.id.from, 
     proxy // we use the same proxy otherwise we can't compare flow identity. 
   )
+  return proxy
 }
 
 type Dict = {[x: string]: {[y: string]: Flow}}
@@ -239,7 +242,7 @@ export const actions: ActionTree<State, State> = {
           knownNodeId: flowView.id.into, 
           newNodeId: flowView.id.from, 
           x: into.x - flowView.dx, 
-          y: into.y - flowView.dy
+          y: into.y - flowView.dy, 
         })
       }
     } else {
@@ -249,7 +252,8 @@ export const actions: ActionTree<State, State> = {
           knownNodeId: flowView.id.from, 
           newNodeId: flowView.id.into,
           x: from.x + flowView.dx, 
-          y: from.y + flowView.dy
+          y: from.y + flowView.dy, 
+
         }) 
       } else {
         dispatch(ActionTypes.COMPARE_AND_RAISE, {
@@ -264,19 +268,18 @@ export const actions: ActionTree<State, State> = {
   }, 
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
+    console.log(flowView) 
     if(flow === undefined) {
       flow = {
         ...createDefaultFlow(), 
         ...flowView, 
-        updatePending: false, 
       }
     } else {
       Object.assign(flow, {
-        ...flowView, 
-        updatePending: false
+        ...flowView
       })
     }
-    set_flow(state, flow) 
+    set_flow_and_return_proxy(state, flow) 
     dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.from, damping: 0.6})
     dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.into, damping: 0.6})
   }, 
@@ -334,17 +337,13 @@ export const actions: ActionTree<State, State> = {
     const fInv = 1 / dFactor(payload.from, payload.into)
 
     let flow: Flow = {
+      ...createDefaultFlow(),
       id: {
         from: payload.from.id, 
         into: payload.into.id, 
       }, 
       dx: (payload.into.x - payload.from.x) * fInv, 
       dy: (payload.into.y - payload.from.y) * fInv, 
-      updatePending: true, 
-      share: Math.random() * 0.25 + 0.01, 
-      notes: "", 
-      changes: {}, 
-      unpublished: true, 
     };
 
     if(undefined !== get_flow(state, flow.id.from, flow.id.into)) {
@@ -362,37 +361,54 @@ export const actions: ActionTree<State, State> = {
         dx: (payload.into.x - payload.from.x) * fInv, 
         dy: (payload.into.y - payload.from.y) * fInv
       }
-      set_flow(state, flow) 
+      flow = set_flow_and_return_proxy(state, flow) 
+      dispatch(ActionTypes.SELECT_FLOW, flow) 
       dispatch(ActionTypes.COMPARE_AND_RAISE, {
         a: payload.from, 
         b: payload.into
       })
-
       dispatch(ActionTypes.ONCHAIN_CREATE_FLOW, msg)
     }
   }, 
   [ActionTypes.ONCHAIN_CREATE_FLOW]({}, _payload: Messages.FlowCreation) {
     // only dispatched for aggregator plugin
   }, 
-  [ActionTypes.UI_ERROR]({state}, msg: string) {
-    state.logEntries.push({
-      id: state.nextLogEntryId++, 
+  [ActionTypes.ONCHAIN_CHANGE_FLOW]({}, _payload: Messages.FlowChange) {
+  }, 
+  [ActionTypes.COMMIT_FLOW]({dispatch}, flow: Flow) {
+    dispatch(ActionTypes.ONCHAIN_CHANGE_FLOW, {
+      id: {
+        ...flow.id
+      },
+      changes: {
+        ...flow.changes
+      }
+    }) 
+  }, 
+  [ActionTypes.UI_ERROR]({dispatch}, msg: string) {
+    dispatch(ActionTypes.LOG, {
       msg: "UI_ERROR: " + msg, 
-      type: 'ui-error'
+      type: 'ui-error', 
     })
   }, 
-  [ActionTypes.NEAR_ERROR]({state}, msg: string) {
-    state.logEntries.push({
-      id: state.nextLogEntryId++, 
+  [ActionTypes.NEAR_ERROR]({dispatch}, msg: string) {
+    dispatch(ActionTypes.LOG, {
       msg: "NEAR_ERROR: " + msg, 
-      type: 'near-error'
+      type: 'near-error', 
     })
   }, 
-  [ActionTypes.TRANSACTION_ERROR]({state}, msg: string) {
-    state.logEntries.push({
-      id: state.nextLogEntryId++, 
+  [ActionTypes.TRANSACTION_ERROR]({dispatch}, msg: string) {
+    dispatch(ActionTypes.LOG, {
       msg: "TRANSACTION_ERROR: " + msg, 
       type: 'transaction-error'
+    })
+  }, 
+  [ActionTypes.LOG]({state}, p: {msg: string, type: string}) {
+    state.logEntries.push({
+      id: state.nextLogEntryId++, 
+      msg: p.msg, 
+      type: p.type, 
+      eol: Date.now() + LOG_VIEW_DURATION
     })
   }, 
   [ActionTypes.NODE_SVG_CLICK]({state, commit, dispatch}, node: Node) {
@@ -413,25 +429,34 @@ export const actions: ActionTree<State, State> = {
         }
         commit(MutationTypes.STOP_CONNECTING)
       } else {
-        if(state.selectedNode === node) {
-          commit(MutationTypes.OPEN_MENU)
-        } else {
-          if(state.selectedFlow) {
-            commit(MutationTypes.DESELECT_FLOW) 
-          }
-          commit(MutationTypes.SELECT_NODE, node)
-        }
+        dispatch(MutationTypes.SELECT_NODE, node)
       }
     }
   }, 
-  [ActionTypes.FLOW_SVG_CLICK]({state, commit}, flow: Flow) {
-    if(state.selectedFlow == flow) {
-      commit(MutationTypes.OPEN_MENU)
-    } else {
-      commit(MutationTypes.SELECT_FLOW, flow)
-      if(state.selectedNode !== undefined) {
-        commit(MutationTypes.DESELECT_NODE) 
+  [ActionTypes.SELECT_NODE]({state, commit}, node: Node) {
+    commit(MutationTypes.OPEN_MENU)
+    if(state.selectedFlow) {
+      commit(MutationTypes.DESELECT_FLOW) 
+    }
+    commit(MutationTypes.SELECT_NODE, node)
+  },
+  [ActionTypes.SELECT_FLOW]({state, dispatch, commit}, flow: Flow) {
+    console.log("selecting flow", JSON.stringify(flow))
+    for(let nodeId of [flow.id.from, flow.id.into]) {
+      let node = this.state.nodes[nodeId]
+      if(!node) {
+        dispatch(ActionTypes.LOAD_NODE, nodeId)
+      } else {
+        if(node.subLevel < 1) {
+          node.subLevel = 1
+          dispatch(ActionTypes.SPILL_SUB_LEVEL, nodeId)
+        }
       }
+    }
+    commit(MutationTypes.OPEN_MENU)
+    commit(MutationTypes.SELECT_FLOW, flow)
+    if(state.selectedNode) {
+      commit(MutationTypes.DESELECT_NODE) 
     }
   }, 
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {

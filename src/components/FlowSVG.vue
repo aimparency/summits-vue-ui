@@ -43,7 +43,7 @@ export default defineComponent({
       const into = this.$store.state.nodes[this.flow.id.into]
       return makeCircularPath(
         {x: from.x, y: from.y, r: from.r}, 
-        this.flow.share, 
+        this.flow.changes.share || this.flow.share, 
         {x: into.x, y: into.y, r: into.r}
       ) 
     }, 
@@ -60,6 +60,7 @@ export default defineComponent({
 <style scoped lang="less">
 .flow {
   stroke: none;
+  opacity: 0.7; 
   &.selected {
     fill: #ccc; 
   }
