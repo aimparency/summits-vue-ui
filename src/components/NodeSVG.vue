@@ -110,11 +110,7 @@ export default defineComponent({
       this.$store.commit(MutationTypes.START_CONNECTING, this.node)
     }, 
     remove() {
-      if(this.node.unpublished) {
-        this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
-      } else {
-        this.$store.dispatch(ActionTypes.COMMIT_REMOVE_NODE, this.node.id) 
-      }
+      this.$store.dispatch(ActionTypes.REMOVE_NODE, this.node.id)
     }
   }
 });

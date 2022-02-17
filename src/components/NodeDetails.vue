@@ -32,7 +32,7 @@
       <button class='standard' v-if='dirty' @click="reset">reset</button>
       <button class='standard' v-if='dirty' @click="commit">commit</button>
     </div>
-    <button v-else 
+    <button 
       class='standard' 
       @blur='restoreRemove'
       @click="remove">remove</button>

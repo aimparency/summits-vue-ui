@@ -77,7 +77,6 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
 
   contract.get_home_node_id().then(
     (result: any) => {
-      console.log("home node id result", result)
       if('Ok' in result) {
         const id = result.Ok
         store.commit(MutationTypes.SET_NODE_DATA, {
@@ -89,7 +88,9 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
         store.state.homeUnset = true
       }
     }, 
-    (err: any) => console.log("seven summits error", err)
+    (err: any) => {
+      store.dispatch(ActionTypes.NEAR_ERROR, "seven summits error. " + err)
+    }
   )
 
   store.subscribeAction(action => {
@@ -101,14 +102,12 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       }).then(
         (result:any) => {
           if('Ok' in result) {
-            console.log("should be stored in state:", result.Ok) 
             let nodeView = result.Ok as Messages.NodeView
             store.commit(MutationTypes.SET_NODE_DATA, nodeView) 
             contract.get_node_flows({
               id: nodeId
             }).then( 
               (result: any) => {
-                console.log("got get_node_flows result", result) 
                 if('Ok' in result) {
                   result.Ok.forEach((flowView: Messages.FlowView) => {
                     store.dispatch(ActionTypes.CREATE_MISSING_NODES_AND_SET_FLOW_DATA, flowView) 
@@ -122,14 +121,11 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
     } else if (action.type === ActionTypes.ONCHAIN_CREATE_NODE) {
       let nodeCreation = action.payload as Messages.NodeCreation
 
-      console.log("create node payload:", nodeCreation)
-
       store.commit(MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS, nodeCreation.id)
       contract.create_node(
         nodeCreation 
       ).then(
         (result: any) => {
-          console.log("result of create_node call asd", result)
           if('Ok' in result) {
             store.commit(MutationTypes.APPLY_NODE_CHANGES, nodeCreation.id)
             store.commit(MutationTypes.SET_PUBLISHED, nodeCreation.id) 
@@ -198,7 +194,6 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
     } else if (action.type === ActionTypes.ONCHAIN_CREATE_FLOW) {
       let flowCreation = action.payload as Messages.FlowCreation
       store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
-      console.log(flowCreation) 
       contract.create_flow(
         flowCreation 
       ).then(
@@ -216,9 +211,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       )
     } else if (action.type === ActionTypes.ONCHAIN_CHANGE_FLOW) {
       let flowChange = action.payload as Messages.FlowChange
-      console.log("flow change:", flowChange) 
       store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
-      console.log("flow change:", flowChange) 
       contract.change_flow(
         flowChange
       ).then(

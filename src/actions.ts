@@ -31,6 +31,7 @@ export enum ActionTypes {
 
   COMMIT_REMOVE_NODE = 'COMMIT_REMOVE_NODE', 
   REMOVE_NODE = 'REMOVE_NODE', 
+  REMOVE_NODE_LOCALLY = 'REMOVE_NODE_LOCALLY', 
 
   // Flow actions
   CREATE_FLOW = 'CREATE_FLOW', 
@@ -141,24 +142,26 @@ export const actions: ActionTree<State, State> = {
     payload: {knownNodeId: string, newNodeId: string, x: number, y: number}
   ) {
     const knownNode = state.nodes[payload.knownNodeId];
+    let commonValues = {
+      subLevel: knownNode.subLevel - 1,
+      deposit: knownNode.deposit, 
+      r: knownNode.deposit, // best estimate
+      id: payload.newNodeId, 
+      x: payload.x, 
+      y: payload.y,
+    }
     if(knownNode.subLevel > 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
-        id: payload.newNodeId, 
-        x: payload.x, 
-        y: payload.y,
+        ...commonValues, 
         updatePending: true, 
-        subLevel: knownNode.subLevel - 1, 
       }
       dispatch(ActionTypes.LOAD_NODE, payload.newNodeId)
     } else if (knownNode.subLevel === 0) {
       state.nodes[payload.newNodeId] = {
         ...createDefaultNode(),
-        id: payload.newNodeId, 
-        x: payload.x, 
-        y: payload.y,
+        ...commonValues, 
         updatePending: false, 
-        subLevel: knownNode.subLevel - 1,
       }
     } 
   }, 
@@ -197,7 +200,7 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.ONCHAIN_CREATE_NODE]({}, _nodeCreation: Messages.NodeCreation) {
     //subscribed to by near-link
   }, 
-  [ActionTypes.CREATE_NODE]({state, commit}, payload: {x: number, y: number}) {
+  [ActionTypes.CREATE_NODE]({state, commit}, payload: {x: number, y: number, deposit: number}) {
     let nodeId = uuid(); 
 
     const node = state.nodes[nodeId] = {
@@ -205,6 +208,8 @@ export const actions: ActionTree<State, State> = {
       id: nodeId, 
       x: payload.x, 
       y: payload.y, 
+      deposit: payload.deposit, 
+      r: payload.deposit, 
       updatePending: false, 
       subLevel: 2, 
       unpublished: true
@@ -221,7 +226,6 @@ export const actions: ActionTree<State, State> = {
         deposit: node.changes.deposit || node.deposit
       }) 
     } else {
-      console.log("alreadyy undefined?", node.id, node) 
       dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {
         id: node.id,
         changes: {
@@ -270,7 +274,6 @@ export const actions: ActionTree<State, State> = {
   }, 
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
-    console.log(flowView) 
     if(flow === undefined) {
       flow = {
         ...createDefaultFlow(), 
@@ -328,8 +331,6 @@ export const actions: ActionTree<State, State> = {
 
     node.x = node.x * payload.damping + newX * (1 - payload.damping) 
     node.y = node.y * payload.damping + newY * (1 - payload.damping) 
-
-    console.log(recalc_counter++)
 
     const increasedDamping = payload.damping + 0.10
     if(increasedDamping < 0.95 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
@@ -452,15 +453,14 @@ export const actions: ActionTree<State, State> = {
     commit(MutationTypes.SELECT_NODE, node)
   },
   [ActionTypes.SELECT_FLOW]({state, dispatch, commit}, flow: Flow) {
-    console.log("selecting flow", JSON.stringify(flow))
     for(let nodeId of [flow.id.from, flow.id.into]) {
       let node = this.state.nodes[nodeId]
       if(!node) {
         dispatch(ActionTypes.LOAD_NODE, nodeId)
       } else {
-        if(node.subLevel < 1) {
-          node.subLevel = 1
-          dispatch(ActionTypes.SPILL_SUB_LEVEL, nodeId)
+        if(node.subLevel < MAX_SUB_LEVEL - 1) {
+          node.subLevel = MAX_SUB_LEVEL - 1
+          dispatch(ActionTypes.LOAD_NODE, nodeId)
         }
       }
     }
@@ -483,14 +483,15 @@ export const actions: ActionTree<State, State> = {
       } else {
         dispatch(ActionTypes.CREATE_NODE, {
           x: state.map.mouse.x, 
-          y: state.map.mouse.y
+          y: state.map.mouse.y, 
+          deposit: 0.1 / state.map.scale
         }) 
       }
     }
   }, 
   [ActionTypes.COMMIT_REMOVE_NODE]({}, _nodeId: string) {
   }, 
-  [ActionTypes.REMOVE_NODE]({state, commit}, nodeId: string) {
+  [ActionTypes.REMOVE_NODE_LOCALLY]({commit, state}, nodeId: string) {
     for(let intoId in state.flows_from_into[nodeId]) {
       commit(MutationTypes.REMOVE_FLOW, {from: nodeId, into: intoId})
     }
@@ -498,6 +499,16 @@ export const actions: ActionTree<State, State> = {
       commit(MutationTypes.REMOVE_FLOW, {from: fromId, into: nodeId})
     }
     commit(MutationTypes.REMOVE_NODE, nodeId)
+  }, 
+  [ActionTypes.REMOVE_NODE]({state, dispatch}, nodeId: string) {
+    let node = state.nodes[nodeId]
+    if(node) {
+      if(node.unpublished) {
+        dispatch(ActionTypes.REMOVE_NODE, nodeId)
+      } else {
+        dispatch(ActionTypes.COMMIT_REMOVE_NODE, nodeId) 
+      }
+    }
   }, 
   [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}, 
   [ActionTypes.NEAR_LOGOUT]({}) {}, 
