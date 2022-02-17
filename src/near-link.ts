@@ -104,6 +104,11 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
           if('Ok' in result) {
             let nodeView = result.Ok as Messages.NodeView
             store.commit(MutationTypes.SET_NODE_DATA, nodeView) 
+            store.dispatch(ActionTypes.RECALC_NODE_POSITION, {
+              nodeId: nodeView.id,
+              damping: 0, 
+              dampingIncrease: 1
+            })
             contract.get_node_flows({
               id: nodeId
             }).then( 
@@ -219,22 +224,35 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
           if('Ok' in result) {
             store.commit(MutationTypes.APPLY_FLOW_CHANGES, flowChange.id)
           } else {
-            store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to change flow." + result.Err)
+            store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to change flow. " + result.Err)
           }
           store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
         }, 
         (err: any) => {
-          store.dispatch(ActionTypes.NEAR_ERROR, "failed to change flow." + err)
+          store.dispatch(ActionTypes.NEAR_ERROR, "failed to change flow. " + err)
           store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
         }
       )
     } else if(action.type === ActionTypes.COMMIT_REMOVE_NODE) {
-      contract.remove_node({
-        id: action.payload
-      }).then((result: any) => {
-        console.log("result of remove node", result) 
-      })
-      // remove_node
+      let nodeRemoval = action.payload as Messages.NodeRemoval
+      store.commit(MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS, nodeRemoval.id)
+      console.log("node removal", nodeRemoval) 
+      contract.remove_node(
+        nodeRemoval
+      ).then(
+        (result: any) => {
+          if('Ok' in result) {
+            store.dispatch(ActionTypes.REMOVE_NODE_LOCALLY, nodeRemoval.id)
+          } else {
+            store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to remove node. " + result.Err)
+          }
+          store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeRemoval.id)
+        }, 
+        (err: any) => {
+          store.dispatch(ActionTypes.NEAR_ERROR, "failed to remove node. " + err)
+          store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeRemoval.id)
+        }
+      )
     } else if (action.type === ActionTypes.REQUEST_NEAR_SIGN_IN) {
       wallet.requestSignIn(
         contractAccountId 

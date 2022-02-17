@@ -164,6 +164,11 @@ export const actions: ActionTree<State, State> = {
         updatePending: false, 
       }
     } 
+    dispatch(ActionTypes.RECALC_NODE_POSITION, {
+      nodeId: payload.newNodeId, 
+      damping: 0, 
+      dampingIncrease: 1
+    })
   }, 
   [ActionTypes.COMPARE_AND_RAISE]({dispatch}, payload: {a: Node, b: Node}) {
     let raiseNode : Node | undefined 
@@ -238,12 +243,12 @@ export const actions: ActionTree<State, State> = {
     {state, dispatch}, 
     flowView: Messages.FlowView
   ) {
-    let ignoreUpdate = true
+    let setFlowData = () => { dispatch(ActionTypes.SET_FLOW_DATA, flowView) }
     let from = state.nodes[flowView.id.from]
     let into = state.nodes[flowView.id.into]
     if(!from) {
       if(into) {
-        ignoreUpdate = false
+        setFlowData()
         dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
           knownNodeId: flowView.id.into, 
           newNodeId: flowView.id.from, 
@@ -252,7 +257,7 @@ export const actions: ActionTree<State, State> = {
         })
       }
     } else {
-      ignoreUpdate = false
+      setFlowData()
       if(!(flowView.id.into in state.nodes)) {
         dispatch(ActionTypes.LOAD_NEIGHBOR_NODE, {
           knownNodeId: flowView.id.from, 
@@ -262,14 +267,12 @@ export const actions: ActionTree<State, State> = {
 
         }) 
       } else {
+        setFlowData()
         dispatch(ActionTypes.COMPARE_AND_RAISE, {
           a: state.nodes[flowView.id.from], 
           b: state.nodes[flowView.id.into]
         })
       }
-    }
-    if(!ignoreUpdate) {
-      dispatch(ActionTypes.SET_FLOW_DATA, flowView)
     }
   }, 
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
@@ -285,10 +288,17 @@ export const actions: ActionTree<State, State> = {
       })
     }
     set_flow_and_return_proxy(state, flow) 
-    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.from, damping: 0.6})
-    dispatch(ActionTypes.RECALC_NODE_POSITION, {nodeId: flow.id.into, damping: 0.6})
   }, 
-  [ActionTypes.RECALC_NODE_POSITION]({state, dispatch}, payload: { nodeId: string, damping: number}) {
+  [ActionTypes.RECALC_NODE_POSITION](
+    {state, dispatch}, 
+    payload: { 
+      nodeId: string, 
+      damping: number, 
+      dampingIncrease: number
+    }
+  ) {
+    let dampingIncrease = payload.dampingIncrease == undefined ? 0.1 : payload.dampingIncrease
+
     const node = state.nodes[payload.nodeId]
     // ok, everything happens in sizes relative to this node as long as possible
     const references = []
@@ -305,19 +315,23 @@ export const actions: ActionTree<State, State> = {
       if(run.dict[payload.nodeId] !== undefined) {
         for(let neighborId in run.dict[payload.nodeId]) {
           const neighbor = state.nodes[neighborId]
-          const flow = run.dict[payload.nodeId][neighborId]
-          const f = dFactor(node, neighbor) * run.sign
-          const weight = flow.share / (Math.pow(flow.dx, 2) + Math.pow(flow.dy, 2)) // 1/x^2
-          references.push({
-            x: neighbor.x + flow.dx * f, 
-            y: neighbor.y + flow.dy * f, 
-            weight
-          })
-          neighborIds.push(neighborId)
-          totalWeight += weight
+          if(!(neighbor.subLevel < 0)) {
+            const flow = run.dict[payload.nodeId][neighborId]
+            const f = dFactor(node, neighbor) * run.sign
+            const weight = flow.share / (Math.pow(flow.dx, 2) + Math.pow(flow.dy, 2)) // 1/x^2
+            references.push({
+              x: neighbor.x + flow.dx * f, 
+              y: neighbor.y + flow.dy * f, 
+              weight
+            })
+            neighborIds.push(neighborId)
+            totalWeight += weight
+          }
         }
       }
     }
+
+     
     let newX = 0
     let newY = 0
     const wf = 1 / totalWeight 
@@ -329,15 +343,22 @@ export const actions: ActionTree<State, State> = {
 
     let squareDistance = Math.pow(node.x - newX, 2) + Math.pow(node.y - newY, 2)
 
+    if(node.subLevel == -1) {
+      console.log("debug", totalWeight, newX, newY, neighborIds)
+    }
+
+    // console.log("recalc" + recalc_counter++)
+
     node.x = node.x * payload.damping + newX * (1 - payload.damping) 
     node.y = node.y * payload.damping + newY * (1 - payload.damping) 
 
-    const increasedDamping = payload.damping + 0.10
-    if(increasedDamping < 0.95 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
+    const increasedDamping = payload.damping + dampingIncrease
+    if(increasedDamping < 1 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
       for(let nId of neighborIds) {
         dispatch(ActionTypes.RECALC_NODE_POSITION, {
           nodeId: nId, 
-          damping: increasedDamping
+          damping: increasedDamping, 
+          dampingIncrease
         }) 
       }
     }
@@ -489,7 +510,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.COMMIT_REMOVE_NODE]({}, _nodeId: string) {
+  [ActionTypes.COMMIT_REMOVE_NODE]({}, nodeRemoval: Messages.NodeRemoval) {
   }, 
   [ActionTypes.REMOVE_NODE_LOCALLY]({commit, state}, nodeId: string) {
     for(let intoId in state.flows_from_into[nodeId]) {
@@ -500,14 +521,13 @@ export const actions: ActionTree<State, State> = {
     }
     commit(MutationTypes.REMOVE_NODE, nodeId)
   }, 
-  [ActionTypes.REMOVE_NODE]({state, dispatch}, nodeId: string) {
-    let node = state.nodes[nodeId]
-    if(node) {
-      if(node.unpublished) {
-        dispatch(ActionTypes.REMOVE_NODE, nodeId)
-      } else {
-        dispatch(ActionTypes.COMMIT_REMOVE_NODE, nodeId) 
-      }
+  [ActionTypes.REMOVE_NODE]({dispatch}, node: Node) {
+    if(node.unpublished) {
+      dispatch(ActionTypes.REMOVE_NODE_LOCALLY, node.id)
+    } else {
+      dispatch(ActionTypes.COMMIT_REMOVE_NODE, {
+        id: node.id
+      }) 
     }
   }, 
   [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}, 

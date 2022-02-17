@@ -34,8 +34,9 @@
     </div>
     <button 
       class='standard' 
-      @blur='restoreRemove'
-      @click="remove">remove</button>
+      :class='{confirm: confirmRemove}'
+      @blur='confirmRemove = false'
+      @click="remove">{{ confirmRemove ? "confirm removal" : "remove" }}</button>
     <h3 v-if="flows_from.length > 0"> incoming flows </h3>
     <div 
       class="flow" 
@@ -81,7 +82,7 @@ export default defineComponent({
       sliderOrigin: {
         deposit: 0
       }, 
-      removeConfirm: false // TBD
+      confirmRemove: false 
     }
   }, 
   props: {
@@ -151,7 +152,7 @@ export default defineComponent({
     keypress(e: KeyboardEvent) {
       if(e.key == 'Enter' && this.dirty) {
         this.commit()
-      }
+      } 
     }, 
     updateDepositSliderOrigin(){
       this.sliderOrigin.deposit = this.deposit
@@ -195,6 +196,16 @@ export default defineComponent({
     }, 
     resetSliderOrigin() {
       this.sliderOrigin.deposit = this.deposit
+    }, 
+    remove() {
+      if(!this.confirmRemove) {
+        this.confirmRemove = true
+      } else {
+        this.$store.dispatch(
+          ActionTypes.REMOVE_NODE, 
+          this.node
+        )
+      }
     }
   }
 });
@@ -232,6 +243,9 @@ h4 {
   }
   button {
     margin: 1rem 0.2rem; 
+    &.confirm {
+      background-color: @danger; 
+    }
   }
 }
 </style>
