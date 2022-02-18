@@ -3,10 +3,6 @@
     class='graph-explorer'
     :class='{grabbing}'
     viewBox="-1 -1 2 2">
-    <circle
-      cx='0'
-      cy='0'
-      r='50'/>
     <g :transform="transform">
       <FlowSVG v-for="flow in flows" 
         :key="`${flow.id.from}x${flow.id.into}`"
@@ -81,7 +77,7 @@ export default defineComponent({
   position: absolute; 
   left: 0; 
   top: 0; 
-  background-color: shade(@background, 0%); 
+  background-color: shade(@secondaryBackground, 90%); 
   width: 100vw; 
   height: 100vh; 
   cursor: default;

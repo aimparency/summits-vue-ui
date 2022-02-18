@@ -35,11 +35,6 @@ body {
   overflow: hidden
 }
 #app {
-  margin: 0; 
   font-family: sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  width: 100vw; 
-  height: 100vh; 
 }
 </style>
