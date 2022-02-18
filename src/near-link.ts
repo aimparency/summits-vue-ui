@@ -20,7 +20,8 @@ export default function createNearLink () {
 
     const contractAccountId = process.env.VUE_APP_CONTRACT_ACCOUNT_ID
     if(contractAccountId == undefined) {
-      console.error("no contract account specified in .env on build") 
+      let err = "no contract account specified in .env on build"
+      store.dispatch(ActionTypes.NEAR_ERROR, err)
       store.commit(MutationTypes.SET_NEAR_STATE, 'error')
     } else {
       store.commit(MutationTypes.SET_NEAR_STATE, 'connecting') 
@@ -236,7 +237,6 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
     } else if(action.type === ActionTypes.COMMIT_REMOVE_NODE) {
       let nodeRemoval = action.payload as Messages.NodeRemoval
       store.commit(MutationTypes.INCREASE_NODE_PENDING_TRANSACTIONS, nodeRemoval.id)
-      console.log("node removal", nodeRemoval) 
       contract.remove_node(
         nodeRemoval
       ).then(
@@ -256,7 +256,6 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
     } else if(action.type === ActionTypes.COMMIT_REMOVE_FLOW) {
       let flowRemoval = action.payload as Messages.FlowRemoval
       store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowRemoval.id)
-      console.log("flow removal", flowRemoval) 
       contract.remove_flow(
         flowRemoval
       ).then(

@@ -82,7 +82,6 @@ function get_flow(state: State, fromId: string, intoId: string) : Flow | undefin
 }
 
 function set_flow_and_return_proxy(state: State, flow: Flow) {
-  console.log(`setting flow and returning proxy`)
   let proxy = set_flow_in_dict(
     state.flows_from_into, 
     flow.id.from, 
@@ -135,7 +134,6 @@ function dFactor(from: Node, into: Node) : number {
 
 export const actions: ActionTree<State, State> = {
   [ActionTypes.LOAD_NODE]({}, _nodeId: string) {
-    console.log("LOAD_NODE with id", _nodeId) 
     // the aggregatorLink subscribes to this action
   }, 
   [ActionTypes.LOAD_NEIGHBOR_NODE](
@@ -279,7 +277,6 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
     if(flow === undefined) {
-      console.log("flow undefined") 
       flow = {
         ...createDefaultFlow(), 
         ...flowView, 
@@ -344,10 +341,6 @@ export const actions: ActionTree<State, State> = {
     }
 
     let squareDistance = Math.pow(node.x - newX, 2) + Math.pow(node.y - newY, 2)
-
-    if(node.subLevel == -1) {
-      console.log("debug", totalWeight, newX, newY, neighborIds)
-    }
 
     node.x = node.x * payload.damping + newX * (1 - payload.damping) 
     node.y = node.y * payload.damping + newY * (1 - payload.damping) 

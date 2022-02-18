@@ -28,16 +28,12 @@ export default defineComponent({
   name: 'Log',
   computed: {
     logEntries() {
-      console.log(this.$store.state.logEntries)
-
       return this.$store.state.logEntries
     }
   },
   methods: {
     remove(key: number) {
-      console.log("key", key) 
       this.$store.state.logEntries.splice(key,1)
-
     }
   }
 });

@@ -156,7 +156,6 @@ export const mutations: MutationTree<State> = {
     state.near.status = newNearState
   }, 
   [MutationTypes.SET_NODE_DATA](state, nodeView: Messages.NodeView) {
-    console.log("about to store node data") 
     if(nodeView.id in state.nodes) {
       Object.assign(state.nodes[nodeView.id], {
         title: nodeView.title, 
@@ -166,7 +165,6 @@ export const mutations: MutationTree<State> = {
         r: nodeView.deposit
       }) 
     } else {
-      console.log("creating new node") 
       state.nodes[nodeView.id] = {
         ...createDefaultNode(), 
         ...nodeView, 
@@ -175,7 +173,6 @@ export const mutations: MutationTree<State> = {
     }
   }, 
   [MutationTypes.SET_SUB_LEVEL](state, payload: {nodeId: string, level: number}) {
-    console.log("changing sublevel of", payload.nodeId)
     state.nodes[payload.nodeId].subLevel = payload.level
   }, 
   [MutationTypes.APPLY_FLOW_CHANGES](state, flowId: FlowId) {
