@@ -17,6 +17,9 @@ button.standard {
   padding: 1rem; 
   border-radius: 2 * @roundsize; 
   cursor: pointer; 
+  &.confirm {
+    background-color: @danger; 
+  }
 }
 
 input.standard, textarea.standard {
@@ -34,3 +37,21 @@ input.standard, textarea.standard {
     color: shade(@foreground, 50%);
   }
 }
+
+div.spinner{
+  @border: 0.5rem solid @foreground; 
+  display: inline-block; 
+  border: 0.5rem solid #8880; 
+  border-bottom: @border;
+  border-top: @border; 
+  border-radius: 50%;
+  width: 2.5em;
+  height: 2.5em;
+  margin: 1rem 0.2rem; 
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

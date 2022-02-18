@@ -27,7 +27,9 @@
       :value='deposit'
       @drag-end='updateDepositSliderOrigin'
       @update='updateDeposit'/>
-    <div v-if="node.pendingTransactions > 0" class="spinner">pending transactions...</div>
+    <div v-if="node.pendingTransactions"> 
+      <div class="spinner"></div>
+    </div>
     <div v-else-if='dirty'>
       <button class='standard' v-if='dirty' @click="reset">reset</button>
       <button class='standard' v-if='dirty' @click="commit">commit</button>
@@ -228,12 +230,6 @@ h4 {
     margin-bottom: 0.5em; 
     user-select: none; 
     cursor: pointer; 
-  }
-  button {
-    margin: 1rem 0.2rem; 
-    &.confirm {
-      background-color: @danger; 
-    }
   }
 }
 </style>

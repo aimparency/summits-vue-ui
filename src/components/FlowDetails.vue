@@ -25,11 +25,13 @@
       :value="notes" 
       placeholder="<notes>"
       @input="updateNotes"/>
-    <div v-if="flow.pendingTransactions > 0" class='spinner'>pending transactions ...</div>
+    <div v-if="flow.pendingTransactions > 0" class='spinner'></div>
     <div v-else>
       <button class='standard' v-if='dirty' @click="reset">reset</button>
       <button class='standard' v-if='dirty' @click="commit">commit</button>
       <button class='standard' 
+        :class='{confirm: confirmRemove}'
+        @blur='confirmRemove = false'
         @click="remove">{{ confirmRemove ? "confirm removal" : "remove" }}</button>
     </div>
   </SideMenuContent>
@@ -162,9 +164,6 @@ export default defineComponent({
   .notes {
     height: 10em; 
     margin: 0.5rem 0rem; 
-  }
-  button {
-    margin: 1rem 0.2rem; 
   }
 }
 </style>
