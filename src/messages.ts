@@ -1,5 +1,7 @@
 import { NodeChanges, FlowChanges, FlowId } from './types'
 
+// Nodes 
+  // Out
 export interface NodeCreation {
   id: string, 
   title: string, 
@@ -12,6 +14,20 @@ export interface NodeChange {
   changes: NodeChanges 
 }
 
+export interface NodeRemoval {
+  id: string 
+}
+  // In
+export interface NodeView {
+  id: string, 
+  title: string, 
+  notes: string, 
+  deposit: number, 
+  owner: string
+}
+
+// Flows 
+  // Out
 export interface FlowCreation {
   id: FlowId, 
   dx: number, 
@@ -25,18 +41,11 @@ export interface FlowChange {
   changes: FlowChanges
 }
 
-export interface NodeRemoval {
-  id: string 
+export interface FlowRemoval {
+  id: string
 }
 
-export interface NodeView {
-  id: string, 
-  title: string, 
-  notes: string, 
-  deposit: number, 
-  owner: string
-}
-
+  // In
 export interface FlowView {
   id: FlowId, 
   dx: number, 
@@ -44,3 +53,4 @@ export interface FlowView {
   notes: string, 
   share: number
 }
+

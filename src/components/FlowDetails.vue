@@ -29,7 +29,8 @@
     <div v-else>
       <button class='standard' v-if='dirty' @click="reset">reset</button>
       <button class='standard' v-if='dirty' @click="commit">commit</button>
-      <button class='standard' @click="remove">remove</button>
+      <button class='standard' 
+        @click="remove">{{ confirmRemove ? "confirm removal" : "remove" }}</button>
     </div>
   </SideMenuContent>
 </template>
@@ -59,6 +60,11 @@ export default defineComponent({
       required: true
     }
   }, 
+  data() {
+    return {
+      confirmRemove: false
+    }
+  }, 
   computed: {
     dirty() : boolean {
       return Object.keys(this.flow.changes).length > 0 
@@ -84,10 +90,10 @@ export default defineComponent({
       }
     }, 
     notes() : string {
-      return this.flow.changes.notes || this.flow.notes
-    }, 
+      return this.flow.changes.notes ?? this.flow.notes
+    },
     share() : number {
-      return this.flow.changes.share || this.flow.share
+      return this.flow.changes.share ?? this.flow.share
     }
   }, 
   methods: {
@@ -120,6 +126,16 @@ export default defineComponent({
     selectIntoNode() {
       if(this.into) {
         this.$store.dispatch(ActionTypes.NODE_SVG_CLICK, this.into)
+      }
+    },
+    remove() {
+      if(!this.confirmRemove) {
+        this.confirmRemove = true
+      } else {
+        this.$store.dispatch(
+          ActionTypes.REMOVE_FLOW, 
+          this.flow
+        )
       }
     }
   }

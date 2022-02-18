@@ -5,7 +5,7 @@
   <SideMenuContent 
     @keypress="keypress"
     class="node-details">
-    <h3> edit </h3>
+    <p class='small'>{{node.id}}</p>
     <input 
       ref='title'
       class='standard title' 
@@ -105,25 +105,13 @@ export default defineComponent({
       ) 
     }, 
     title() : string {
-      if(this.node.changes.title !== undefined) {
-        return this.node.changes.title 
-      } else {
-        return this.node.title
-      }
+      return this.node.changes.title ?? this.node.title
     }, 
     notes() : string {
-      if(this.node.changes.notes !== undefined) {
-        return this.node.changes.notes 
-      } else {
-        return this.node.notes
-      }
+      return this.node.changes.notes ?? this.node.notes
     }, 
     deposit() : number {
-      if(this.node.changes.deposit !== undefined) {
-        return this.node.changes.deposit 
-      } else {
-        return this.node.deposit
-      }
+      return this.node.changes.deposit ?? this.node.deposit
     }, 
     flows_from() : {flow: Flow, node: Node}[] {
       let flows = this.$store.state.flows_into_from[this.node.id] 

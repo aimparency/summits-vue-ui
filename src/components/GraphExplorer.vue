@@ -56,7 +56,18 @@ export default defineComponent({
       return flows; 
     }, 
     nodes() : Node[] {
-      return Object.values(this.$store.state.nodes)
+      let nodes = Object.values(this.$store.state.nodes)
+      let selectedNode = this.$store.state.selectedNode
+      if(selectedNode) {
+        nodes = nodes.filter(node => node !== selectedNode)
+      }
+      nodes = nodes.filter(node => node.subLevel < 0).concat(
+        nodes.filter(node => node.subLevel >= 0)
+      )
+      if(selectedNode) {
+        nodes.push(selectedNode)
+      }
+      return nodes
     }, 
   }, 
 });

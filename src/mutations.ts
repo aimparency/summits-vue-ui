@@ -82,9 +82,14 @@ export const mutations: MutationTree<State> = {
   [MutationTypes.START_CONNECTING](state, node: Node) {
     state.connectFrom = node
   }, 
-  [MutationTypes.REMOVE_FLOW](state, ids: {from: string, into: string}) {
-    delete state.flows_from_into[ids.from][ids.into]
-    delete state.flows_into_from[ids.into][ids.from]
+  [MutationTypes.REMOVE_FLOW](state, id: FlowId) {
+    delete state.flows_from_into[id.from][id.into]
+    delete state.flows_into_from[id.into][id.from]
+    if(state.selectedFlow !== undefined) {
+      if(state.selectedFlow.id.from == id.from && state.selectedFlow.id.into == id.into) {
+        delete state.selectedFlow
+      }
+    }
   }, 
   [MutationTypes.REMOVE_NODE](state, nodeId: string) {
     if(state.selectedNode !== undefined) {

@@ -2,14 +2,12 @@ import State from './state';
 import * as Messages from './messages';
 
 import { v4 as uuid } from 'uuid'; 
-import { Flow, Node, createDefaultFlow, createDefaultNode } from '@/types'; 
+import { Flow, Node, createDefaultFlow, createDefaultNode, FlowId } from '@/types'; 
 
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
 
 const MAX_SUB_LEVEL = 2;  
-
-let recalc_counter = 0
 
 export enum ActionTypes {
   LOAD_NODE = 'LOAD_NODE',
@@ -41,7 +39,8 @@ export enum ActionTypes {
   ONCHAIN_CHANGE_FLOW = 'ONCHAIN_CHANGE_FLOW', 
 
   COMMIT_REMOVE_FLOW = 'COMMIT_REMOVE_FLOW', 
-  REMOVE_FLOW = 'REMOVE_FLOW', 
+  REMOVE_FLOW = 'REMOVE_FLOW',
+  REMOVE_FLOW_LOCALLY = 'REMOVE_FLOW_LOCALLY', 
 
   CREATE_MISSING_NODES_AND_SET_FLOW_DATA = 'CREATE_MISSING_NODES_AND_SET_FLOW_DATA',
 
@@ -77,12 +76,13 @@ function get_flow(state: State, fromId: string, intoId: string) : Flow | undefin
     intoId, 
     fromId
   )
-  if(from_into_flow !== undefined && from_into_flow !== into_from_flow) {
+  if(from_into_flow !== undefined && from_into_flow == into_from_flow) {
     return from_into_flow
   }
 }
 
 function set_flow_and_return_proxy(state: State, flow: Flow) {
+  console.log(`setting flow and returning proxy`)
   let proxy = set_flow_in_dict(
     state.flows_from_into, 
     flow.id.from, 
@@ -135,6 +135,7 @@ function dFactor(from: Node, into: Node) : number {
 
 export const actions: ActionTree<State, State> = {
   [ActionTypes.LOAD_NODE]({}, _nodeId: string) {
+    console.log("LOAD_NODE with id", _nodeId) 
     // the aggregatorLink subscribes to this action
   }, 
   [ActionTypes.LOAD_NEIGHBOR_NODE](
@@ -226,9 +227,9 @@ export const actions: ActionTree<State, State> = {
     if(node.unpublished) {
       dispatch(ActionTypes.ONCHAIN_CREATE_NODE, {
         id: node.id, 
-        title: node.changes.title || node.title, 
-        notes: node.changes.notes || node.notes, 
-        deposit: node.changes.deposit || node.deposit
+        title: node.changes.title ?? node.title, 
+        notes: node.changes.notes ?? node.notes, 
+        deposit: node.changes.deposit ?? node.deposit
       }) 
     } else {
       dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {
@@ -278,16 +279,17 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
     if(flow === undefined) {
+      console.log("flow undefined") 
       flow = {
         ...createDefaultFlow(), 
         ...flowView, 
       }
+      set_flow_and_return_proxy(state, flow) 
     } else {
       Object.assign(flow, {
         ...flowView
       })
     }
-    set_flow_and_return_proxy(state, flow) 
   }, 
   [ActionTypes.RECALC_NODE_POSITION](
     {state, dispatch}, 
@@ -346,8 +348,6 @@ export const actions: ActionTree<State, State> = {
     if(node.subLevel == -1) {
       console.log("debug", totalWeight, newX, newY, neighborIds)
     }
-
-    // console.log("recalc" + recalc_counter++)
 
     node.x = node.x * payload.damping + newX * (1 - payload.damping) 
     node.y = node.y * payload.damping + newY * (1 - payload.damping) 
@@ -465,8 +465,8 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.SELECT_NODE]({state, dispatch, commit}, node: Node) {
     if(node.subLevel < MAX_SUB_LEVEL) {
       node.subLevel = MAX_SUB_LEVEL 
-      dispatch(ActionTypes.LOAD_NODE, node.id) 
     }
+    dispatch(ActionTypes.LOAD_NODE, node.id) // reload node on selection
     commit(MutationTypes.OPEN_MENU)
     if(state.selectedFlow) {
       commit(MutationTypes.DESELECT_FLOW) 
@@ -476,11 +476,9 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.SELECT_FLOW]({state, dispatch, commit}, flow: Flow) {
     for(let nodeId of [flow.id.from, flow.id.into]) {
       let node = this.state.nodes[nodeId]
-      if(!node) {
-        dispatch(ActionTypes.LOAD_NODE, nodeId)
-      } else {
-        if(node.subLevel < MAX_SUB_LEVEL - 1) {
-          node.subLevel = MAX_SUB_LEVEL - 1
+      if(node) {
+        if(node.subLevel < 0) {
+          node.subLevel = 0
           dispatch(ActionTypes.LOAD_NODE, nodeId)
         }
       }
@@ -510,7 +508,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.COMMIT_REMOVE_NODE]({}, nodeRemoval: Messages.NodeRemoval) {
+  [ActionTypes.COMMIT_REMOVE_NODE]({}, _nodeRemoval: Messages.NodeRemoval) {
   }, 
   [ActionTypes.REMOVE_NODE_LOCALLY]({commit, state}, nodeId: string) {
     for(let intoId in state.flows_from_into[nodeId]) {
@@ -529,6 +527,18 @@ export const actions: ActionTree<State, State> = {
         id: node.id
       }) 
     }
+  }, 
+  [ActionTypes.COMMIT_REMOVE_FLOW]({}, _flowRemoval: Messages.FlowRemoval) {
+  },
+  [ActionTypes.REMOVE_FLOW_LOCALLY]({commit}, flowId: FlowId){
+    commit(MutationTypes.REMOVE_FLOW, flowId)
+  }, 
+  [ActionTypes.REMOVE_FLOW]({dispatch}, flow: Flow) {
+    dispatch(ActionTypes.COMMIT_REMOVE_FLOW, {
+      id: {
+        ...flow.id
+      }
+    })
   }, 
   [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}, 
   [ActionTypes.NEAR_LOGOUT]({}) {}, 

@@ -8,11 +8,9 @@ const colorHash = new ColorHash({ lightness: 0.4 });
 export const getters: GetterTree<State, State> = {
   nodeColor: (state: State) => (node_id: string) => {
     let node = state.nodes[node_id]
-    if(node === undefined) {
-      return '#f00'
-    } else if (node.unpublished == true) {
+    if (node.unpublished == true) {
       return '#777'
-    } else if(node.subLevel === -1) {
+    } else if(node.subLevel < 0) {
       return '#444'
     } else {
       return colorHash.hex(node.id); 

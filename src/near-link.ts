@@ -253,6 +253,26 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
           store.commit(MutationTypes.DECREASE_NODE_PENDING_TRANSACTIONS, nodeRemoval.id)
         }
       )
+    } else if(action.type === ActionTypes.COMMIT_REMOVE_FLOW) {
+      let flowRemoval = action.payload as Messages.FlowRemoval
+      store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowRemoval.id)
+      console.log("flow removal", flowRemoval) 
+      contract.remove_flow(
+        flowRemoval
+      ).then(
+        (result: any) => {
+          if('Ok' in result) {
+            store.dispatch(ActionTypes.REMOVE_FLOW_LOCALLY, flowRemoval.id)
+          } else {
+            store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to remove flow. " + result.Err)
+          }
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowRemoval.id)
+        }, 
+        (err: any) => {
+          store.dispatch(ActionTypes.NEAR_ERROR, "failed to remove flow. " + err)
+          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowRemoval.id)
+        }
+      )
     } else if (action.type === ActionTypes.REQUEST_NEAR_SIGN_IN) {
       wallet.requestSignIn(
         contractAccountId 
