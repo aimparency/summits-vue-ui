@@ -70,7 +70,7 @@ export default defineComponent({
 @import '~@/global.less';
 
 .side-menu{ 
-  position: absolute; 
+  position: fixed; 
   background-color: @background; 
   border: 0.2rem solid tint(@background, 20%);
   border-right: none; 
