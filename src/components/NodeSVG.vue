@@ -1,5 +1,6 @@
 <template>
   <g class="node"
+    :class="{noTransition}"
     :style="{transform}">
     <circle 
       :class="{selected, loading, placeholder}"
@@ -8,16 +9,19 @@
       cy="0" 
       r="1"
       @click.stop='select'
+      @mousedown='setDragCandidate'
     />
-    <text
+    <!--text
       y="-1.2"
       x="0"
       class="label debug">
       {{node.subLevel}}
-    </text>
+    </text-->
 
     <text
       v-if="!placeholder" 
+      dominant-baseline="central"
+      text-anchor="middle"
       class="label"
       x="0"
       y="0">
@@ -71,6 +75,9 @@ export default defineComponent({
       let node = this.node
       return `translate(${node.x}px, ${node.y}px) scale(${node.changes.deposit ?? node.r})`
     }, 
+    noTransition() : boolean {
+      return this.node == this.$store.state.dragCandidate
+    }, 
     titleLines() : string[] {
       let title = this.node.changes.title ?? this.node.title
       let length = title.length; 
@@ -108,6 +115,9 @@ export default defineComponent({
     select() {
       this.$store.dispatch(ActionTypes.NODE_SVG_CLICK, this.node)
     }, 
+    setDragCandidate() {
+      this.$store.state.dragCandidate = this.node
+    }, 
     connect() {
       this.$store.commit(MutationTypes.START_CONNECTING, this.node)
     }, 
@@ -122,6 +132,9 @@ export default defineComponent({
 <style scoped lang="less">
 .node {
   transition: transform 0.3s; 
+  &.noTransition {
+    transition: none; 
+  }
   circle {
     cursor: pointer; 
     transition: stroke-dasharray;  
@@ -142,8 +155,6 @@ export default defineComponent({
     fill: #fff; 
     font-size: 0.25px;
     font-family: monospace;
-    text-anchor: middle; 
-    dominant-baseline: central; 
     user-select: none; 
     pointer-events: none; 
   }

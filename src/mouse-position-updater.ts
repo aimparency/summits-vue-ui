@@ -1,8 +1,10 @@
-import { mutations, MutationTypes } from './mutations'; 
+import { MutationTypes } from './mutations'; 
 import { ActionTypes } from './actions'; 
 import { Store } from 'vuex';
 import State from './state';
 import { Vector2 } from 'three';
+
+import { Node } from '@/types';
 
 export default function createMousePositionUpdater() {
   return (store: Store<State>) => {
@@ -25,14 +27,14 @@ export default function createMousePositionUpdater() {
       )
     }
     window.addEventListener("mousemove", (e: MouseEvent) => {
-      if(store.state.connectFrom !== undefined) {
-        store.commit(
-          MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
-          pageToSVGCoords(e.pageX, e.pageY)
-        )
-      }
+      store.commit(
+        MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
+        pageToSVGCoords(e.pageX, e.pageY)
+      )
       if(store.state.map.panBeginning !== undefined) {
         updatePan(e.pageX, e.pageY); 
+      } else if (store.state.map.dragBeginning) {
+        updateDrag(e.pageX, e.pageY); 
       }
     });
 
@@ -52,7 +54,7 @@ export default function createMousePositionUpdater() {
         const dx = pb.page.x - x
         const dy = pb.page.y - y
         if(dx * dx + dy * dy > 5 * 5) {
-          store.commit(MutationTypes.ACTIVATE_PANNING)
+          store.state.map.preventReleaseClick = true
           const halfSide = Math.min(
             window.innerWidth, 
             window.innerHeight
@@ -64,21 +66,61 @@ export default function createMousePositionUpdater() {
         }
       }
     }
+    const updateDrag = (x: number, y: number) => {
+      const db = store.state.map.dragBeginning;
+      const node = store.state.dragCandidate; 
+      if(db && node) {
+        const dx = db.page.x - x
+        const dy = db.page.y - y
+        if(dx * dx + dy * dy > 5 * 5) {
+          store.state.map.preventReleaseClick = true
+          const halfSide = Math.min(
+            window.innerWidth, 
+            window.innerHeight
+          ) / 2;
+          const scale = store.state.map.scale; 
+          node.x = db.initialPosition.x - dx / halfSide / scale; 
+          node.y = db.initialPosition.y - dy / halfSide / scale;
+        }
+      }
+    }
     const beginPan = (x:number, y:number) => {
       store.state.map.panBeginning = {
         page: new Vector2(x, y), 
         offset: store.state.map.offset.clone()
       }
     }
+    const beginDrag = (node: Node, x:number, y:number) => {
+      store.state.map.dragBeginning = {
+        page: new Vector2(x,y), 
+        initialPosition: new Vector2(node.x, node.y) 
+      }
+    }
     const endPan = (x: number, y: number) => {
       updatePan(x,y);
       delete store.state.map.panBeginning; 
     }
+    const endDrag = (x: number, y: number) => {
+      updateDrag(x,y);  
+      if(store.state.map.preventReleaseClick && store.state.dragCandidate) {
+        store.dispatch(ActionTypes.PERSIST_NODE_POSITION, store.state.dragCandidate)
+      }
+      delete store.state.map.dragBeginning; 
+      delete store.state.dragCandidate; 
+    }
     window.addEventListener("mousedown", (e: MouseEvent) => {
-      beginPan(e.pageX, e.pageY) 
+      if(store.state.dragCandidate) {
+        beginDrag(store.state.dragCandidate, e.pageX, e.pageY)
+      } else {
+        beginPan(e.pageX, e.pageY) 
+      }
     })
     window.addEventListener("mouseup", (e: MouseEvent) => {
-      endPan(e.pageX, e.pageY); 
+      if(store.state.map.panBeginning) {
+        endPan(e.pageX, e.pageY); 
+      } else if (store.state.map.dragBeginning) {
+        endDrag(e.pageX, e.pageY);
+      }
     })
     window.addEventListener("click", (e: MouseEvent) => {
       store.commit(

@@ -140,12 +140,6 @@ export const mutations: MutationTree<State> = {
   [MutationTypes.OPEN_MENU](state) {
     state.menu.open = true
   }, 
-  [MutationTypes.ACTIVATE_PANNING](state) {
-    state.map.panning = true
-  }, 
-  [MutationTypes.STOP_PANNING](state) {
-    state.map.panning = false 
-  }, 
   [MutationTypes.TOGGLE_SHOW_PROFILE](state) {
     state.menu.showProfile = !state.menu.showProfile;
   }, 

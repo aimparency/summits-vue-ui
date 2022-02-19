@@ -15,6 +15,7 @@ export default interface State {
   selectedNode?: Node, 
   selectedFlow?: Flow, 
   connectFrom?: Node, 
+  dragCandidate?: Node, 
   map: {
     mouse: Vector2,    /** Offset is in map coordinates. 
      * assume the mouse pointer is in the upper left corner, 
@@ -29,7 +30,11 @@ export default interface State {
       offset: Vector2, 
       page: Vector2
     }, 
-    panning: boolean
+    preventReleaseClick: boolean,  
+    dragBeginning: undefined | {
+      page: Vector2, 
+      initialPosition: Vector2
+    }
   }, 
   menu: {
     open: boolean, 
@@ -54,7 +59,8 @@ export function getDefault() : State {
       offset: new Vector2(0,0),
       scale: 0.1, 
       panBeginning: undefined, 
-      panning: false
+      preventReleaseClick: false, 
+      dragBeginning: undefined, 
     }, 
     menu: {
       open: true, 

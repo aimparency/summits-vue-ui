@@ -15,12 +15,6 @@
       <slot></slot>
     </div>
     <div @click='rbclick' class='x'>
-      <span v-if="$store.state.menu.showProfile">
-        &#128473; 
-      </span>
-      <span v-else>
-        &#128100;
-      </span>
     </div>
   </div>
 </template>
@@ -63,6 +57,7 @@ export default defineComponent({
   }
   .x {
     user-select:none; 
+    box-shadow: @clickableBoxShadow; 
     width: 2.5rem; 
     height: 2.5rem; 
     background-color: shade(@foreground, 20%); 

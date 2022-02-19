@@ -1,7 +1,6 @@
 <template>
   <svg 
     class='graph-explorer'
-    :class='{grabbing}'
     viewBox="-1 -1 2 2">
     <g :transform="transform">
       <FlowSVG v-for="flow in flows" 
@@ -31,9 +30,6 @@ export default defineComponent({
     Connector
   },
   computed: {
-    grabbing() : boolean {
-      return this.$store.state.map.panning;
-    }, 
     transform() : string {
       const map = this.$store.state.map;
       return [
@@ -81,8 +77,5 @@ export default defineComponent({
   width: 100vw; 
   height: 100vh; 
   cursor: default;
-  &.grabbing {
-    cursor: grabbing; 
-  }
 }
 </style>

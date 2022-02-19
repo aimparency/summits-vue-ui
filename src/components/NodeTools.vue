@@ -1,6 +1,6 @@
 <template>
   <g 
-    class="connect" 
+    class="tool connect" 
     transform="translate(0.8 0.8)"
     @click.stop="$emit('connect')">
     <circle
@@ -8,15 +8,18 @@
       cy="0" 
       r="0.4"
     />
-    <path
-      fill="white"
-      transform='scale(0.004)'
-      d="M -1.3389046,-54.248781 C 12.154134,-40.575552 14.15251,4.1494317 32.126607,17.292976 44.188788,14.729421 46.769058,4.8720457 46.769058,4.8720457 c 0,0 6.7805,10.4346363 6.42941,48.7253553 -36.838481,2.75479 -50.8671687,-1.28223 -50.8671687,-1.28223 0,0 11.1321207,-7.05538 15.1434877,-18.18663 C -0.76507162,16.47156 -39.217834,11.896503 -53.428967,-8.0212083 -25.402552,-13.708701 -8.7596077,-29.677534 -1.3389046,-54.248781 Z"
-    />
+    <text 
+      x="0"
+      y="0"
+      transform="scale(-1)"
+      dominant-baseline="central" text-anchor="middle"
+      font-size="0.8">
+      ⤽
+    </text>
   </g>
   <g
-    class="remove"
-    transform="translate(-0.8 -0.8)"
+    class="tool remove"
+    transform="translate(0.8 -0.8)"
     @click.stop="$emit('remove')">
     <circle
       :class="{confirm: confirmRemove}"
@@ -24,6 +27,11 @@
       cy="0" 
       r="0.4"
     />
+    <text
+      dominant-baseline="central" text-anchor="middle"
+      font-size="0.6">
+      &#128473;
+    </text>
   </g>
 </template>
 
@@ -58,14 +66,17 @@ export default defineComponent({
 @import '~@/global.less';
 
 .tool{
-  fill: #888; 
   cursor: pointer; 
+  box-shadow: 0 0 0.1px #000; 
   circle {
-    stroke: #bbb; 
-    stroke-width: 0.025; 
+    fill: #ccc; 
+    stroke: none; 
     &.confirm {
       fill: @danger; 
     }
+  }
+  text {
+    fill: @background; 
   }
 }
 .connect{

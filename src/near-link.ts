@@ -218,6 +218,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
     } else if (action.type === ActionTypes.ONCHAIN_CHANGE_FLOW) {
       let flowChange = action.payload as Messages.FlowChange
       store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+      console.log("changing connection") 
       contract.change_flow(
         flowChange
       ).then(
@@ -227,6 +228,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to change flow. " + result.Err)
           }
+          console.log("changing connection done") 
           store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
         }, 
         (err: any) => {

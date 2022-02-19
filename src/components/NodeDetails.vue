@@ -223,6 +223,7 @@ h4 {
     margin: 0.5rem 0rem; 
   }
   .flow {
+    box-shadow: @clickableBoxShadow; 
     background-color: tint(@background, 20%); 
     text-align: left; 
     border-radius: 0.5em; 

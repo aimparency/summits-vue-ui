@@ -62,6 +62,8 @@ export enum ActionTypes {
   NEAR_LOGOUT = 'NEAR_LOGOUT', 
 
   RECALC_NODE_POSITION = 'RECALC_NODE_POSITION', 
+
+  PERSIST_NODE_POSITION = 'PERSIST_NODE_POSITION'
 }
 
 
@@ -434,8 +436,8 @@ export const actions: ActionTree<State, State> = {
     })
   }, 
   [ActionTypes.NODE_SVG_CLICK]({state, commit, dispatch}, node: Node) {
-    if(state.map.panning) {
-      commit(MutationTypes.STOP_PANNING)
+    if(state.map.preventReleaseClick) { 
+      state.map.preventReleaseClick = false
     } else {
       if(state.connectFrom !== undefined) {
         if(node !== state.connectFrom) {
@@ -483,8 +485,8 @@ export const actions: ActionTree<State, State> = {
     }
   }, 
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {
-    if(state.map.panning) {
-      commit(MutationTypes.STOP_PANNING)
+    if(state.map.preventReleaseClick) { 
+      state.map.preventReleaseClick = false
     } else {
       if(state.connectFrom !== undefined) {
         commit(MutationTypes.STOP_CONNECTING); 
@@ -535,4 +537,27 @@ export const actions: ActionTree<State, State> = {
   }, 
   [ActionTypes.REQUEST_NEAR_SIGN_IN]({}) {}, 
   [ActionTypes.NEAR_LOGOUT]({}) {}, 
+  [ActionTypes.PERSIST_NODE_POSITION]({state, dispatch}, node: Node) {
+    const runs = [{
+      dict: state.flows_from_into, 
+      sign: 1
+    }, {
+      dict: state.flows_into_from, 
+      sign: -1
+    }]
+    for(let run of runs) {
+      if(run.dict[node.id] !== undefined) {
+        for(let neighborId in run.dict[node.id]) {
+          const neighbor = state.nodes[neighborId]
+          if(!(neighbor.subLevel < 0)) {
+            const flow = run.dict[node.id][neighborId]
+            const f = dFactor(node, neighbor) * run.sign
+            flow.changes.dx = (neighbor.x - node.x) / f
+            flow.changes.dy = (neighbor.y - node.y) / f
+            dispatch(ActionTypes.COMMIT_FLOW, flow)
+          }
+        }
+      }
+    }
+  }
 }

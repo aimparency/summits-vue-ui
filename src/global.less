@@ -10,6 +10,8 @@
 
 @roundsize: 0.5rem; 
 
+@clickableBoxShadow: 0 0 1.5rem #0008;
+
 button.standard {
   box-sizing: border-box; 
   border: none; 
@@ -19,6 +21,7 @@ button.standard {
   font-size: 1rem;
   padding: 1rem; 
   border-radius: 2 * @roundsize; 
+  box-shadow: @clickableBoxShadow; 
   cursor: pointer; 
   &.confirm {
     background-color: @danger; 
