@@ -65,7 +65,8 @@ export default defineComponent({
 <style scoped lang="less">
 @import '~@/global.less';
 
-.tool{
+.tool{  
+  user-select: none; 
   cursor: pointer; 
   box-shadow: 0 0 0.1px #000; 
   circle {
