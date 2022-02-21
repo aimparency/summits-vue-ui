@@ -3,6 +3,10 @@
 ## Project setup
 
 ### install dependecies 
+
+Clone this repo. 
+You probably want to check out __blockchain-only__ branch. 
+
 ```
 yarn install
 ```

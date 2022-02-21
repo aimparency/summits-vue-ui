@@ -28,6 +28,7 @@ export default function createNearLink () {
 
       connect({
         ...nearConfig, 
+        headers: {}, 
         deps: {
           keyStore: new keyStores.BrowserLocalStorageKeyStore()
         }
