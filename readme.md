@@ -5,6 +5,8 @@ It allows users to create and edit projects (nodes) and flows (edges).
 
 You probably want to check out the __blockchain-only__ branch. 
 
+Also have a look at the smart contract code here: [github.com/aimparency/summits-contracts/tree/blockchain-only](https://github.com/aimparency/summits-contracts/tree/blockchain-only)
+
 ## development setup
 
 ### install dependecies 
