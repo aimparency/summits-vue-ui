@@ -3,14 +3,13 @@
     <h4> project details </h4>
   </SideMenuHeader>
   <SideMenuContent 
-    @keypress="keypress"
     class="node-details">
-    <p class='small'>{{node.id}}</p>
     <input 
       ref='title'
       class='standard title' 
       :value="title" 
       placeholder="<node title>"
+      @keypress="keypress"
       @input="updateTitle"/>
     <textarea 
       ref="notes"
@@ -30,15 +29,17 @@
     <div v-if="node.pendingTransactions"> 
       <div class="spinner"></div>
     </div>
-    <div v-else-if='dirty'>
-      <button class='standard' v-if='dirty' @click="reset">reset</button>
-      <button class='standard' v-if='dirty' @click="commit">commit</button>
+    <div else>
+      <span v-if='dirty'>
+        <button class='standard' v-if='dirty' @click="reset">reset</button>
+        <button class='standard' v-if='dirty' @click="commit">commit</button>
+      </span>
+      <button 
+        class='standard' 
+        :class='{confirm: confirmRemove}'
+        @blur='confirmRemove = false'
+        @click="remove">{{ confirmRemove ? "confirm removal" : "remove" }}</button>
     </div>
-    <button 
-      class='standard' 
-      :class='{confirm: confirmRemove}'
-      @blur='confirmRemove = false'
-      @click="remove">{{ confirmRemove ? "confirm removal" : "remove" }}</button>
     <h3 v-if="flows_from.length > 0"> incoming flows </h3>
     <div 
       class="flow" 
@@ -231,6 +232,9 @@ h4 {
     margin-bottom: 0.5em; 
     user-select: none; 
     cursor: pointer; 
+  }
+  h3 {
+    margin-top: 3rem; 
   }
 }
 </style>

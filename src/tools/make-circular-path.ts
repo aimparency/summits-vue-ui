@@ -54,7 +54,7 @@ function makeCircularPath(
         .sub(normMToIntoRot.clone().multiplyScalar(h))
     }
 
-    const width = 2 * from.r * fromShare;  // nice!
+    const width = 1 * from.r * fromShare;  // nice!
 
     const arrowPeak = getArcPoint(into.r); 
 

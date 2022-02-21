@@ -2,41 +2,44 @@
   <g class="node"
     :class="{noTransition}"
     :style="{transform}">
-    <circle 
-      :class="{selected, loading, placeholder}"
-      :fill="fillColor" 
-      cx="0" 
-      cy="0" 
-      r="1"
-      @click.stop='select'
-      @mousedown='setDragCandidate'
-    />
-    <!--text
-      y="-1.2"
-      x="0"
-      class="label debug">
-      {{node.subLevel}}
-    </text-->
-
-    <text
-      v-if="!placeholder" 
-      dominant-baseline="central"
-      text-anchor="middle"
-      class="label"
-      x="0"
-      y="0">
-      <tspan 
+    <g 
+      :transform="scale">
+      <circle 
+        :class="{selected, loading, placeholder}"
+        :fill="fillColor" 
+        cx="0" 
+        cy="0" 
+        r="1"
+        @click.stop='select'
+        @mousedown='setDragCandidate'
+      />
+      <!--text
+        y="-1.2"
         x="0"
-        :dy="i == 0 ? (-0.3 * (titleLines.length - 1) / 2) : 0.3 "
-        :textLength="line.length * 0.61 + 'em'"
-        v-for="line, i in titleLines" 
-        :key="i"> {{ line }} </tspan>
-    </text>
-    <NodeTools
-      v-if="showTools"
-      @remove='remove'
-      @connect='connect'
-    />
+        class="label debug">
+        {{node.subLevel}}
+      </text-->
+
+      <text
+        v-if="!placeholder" 
+        dominant-baseline="central"
+        text-anchor="middle"
+        class="label"
+        x="0"
+        y="0">
+        <tspan 
+          x="0"
+          :dy="i == 0 ? (-0.3 * (titleLines.length - 1) / 2) : 0.3 "
+          :textLength="line.length * 0.61 + 'em'"
+          v-for="line, i in titleLines" 
+          :key="i"> {{ line }} </tspan>
+      </text>
+      <NodeTools
+        v-if="showTools"
+        @remove='remove'
+        @connect='connect'
+      />
+    </g>
   </g>
 </template>
 
@@ -73,7 +76,11 @@ export default defineComponent({
   computed: {
     transform() : string {
       let node = this.node
-      return `translate(${node.x}px, ${node.y}px) scale(${node.changes.deposit ?? node.r})`
+      return `translate(${node.x}px, ${node.y}px)`
+    }, 
+    scale() : string {
+      let node = this.node
+      return `scale(${node.changes.deposit ?? node.r})`
     }, 
     noTransition() : boolean {
       return this.node == this.$store.state.dragCandidate

@@ -137,6 +137,9 @@ export const mutations: MutationTree<State> = {
   [MutationTypes.RESET_NODE_CHANGES](_, node: Node) {
     node.changes = {}
   }, 
+  [MutationTypes.RESET_FLOW_CHANGES](_, flow: Flow) {
+    flow.changes = {}
+  }, 
   [MutationTypes.OPEN_MENU](state) {
     state.menu.open = true
   }, 

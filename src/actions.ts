@@ -37,6 +37,7 @@ export enum ActionTypes {
   COMMIT_FLOW = 'COMMIT_FLOW', 
   ONCHAIN_CREATE_FLOW = 'ONCHAIN_CREATE_FLOW', 
   ONCHAIN_CHANGE_FLOW = 'ONCHAIN_CHANGE_FLOW', 
+  ONCHAIN_BULK_CHANGE_FLOW = 'ONCHAIN_BULK_CHANGE_FLOW', 
 
   COMMIT_REMOVE_FLOW = 'COMMIT_REMOVE_FLOW', 
   REMOVE_FLOW = 'REMOVE_FLOW',
@@ -224,7 +225,7 @@ export const actions: ActionTree<State, State> = {
     commit(MutationTypes.SELECT_NODE, node)
   }, 
   [ActionTypes.COMMIT_NODE]({dispatch}, node: Node) {
-    if(node.unpublished) {
+    if(node.unpublished && node.pendingTransactions == 0) {
       dispatch(ActionTypes.ONCHAIN_CREATE_NODE, {
         id: node.id, 
         title: node.changes.title ?? node.title, 
@@ -273,10 +274,20 @@ export const actions: ActionTree<State, State> = {
           a: state.nodes[flowView.id.from], 
           b: state.nodes[flowView.id.into]
         })
+        dispatch(ActionTypes.RECALC_NODE_POSITION, {
+          nodeId: flowView.id.into, 
+          damping: 0.4, 
+          dampingIncrease: 0.4
+        })
+        dispatch(ActionTypes.RECALC_NODE_POSITION, {
+          nodeId: flowView.id.from, 
+          damping: 0.4, 
+          dampingIncrease: 0.4
+        })
       }
     }
   }, 
-  [ActionTypes.SET_FLOW_DATA]({state, dispatch}, flowView: Messages.FlowView) {
+  [ActionTypes.SET_FLOW_DATA]({state}, flowView: Messages.FlowView) {
     let flow = get_flow(state, flowView.id.from, flowView.id.into); 
     if(flow === undefined) {
       flow = {
@@ -331,30 +342,31 @@ export const actions: ActionTree<State, State> = {
         }
       }
     }
-
      
-    let newX = 0
-    let newY = 0
-    const wf = 1 / totalWeight 
-    for(let reference of references) {
-      const f = reference.weight * wf
-      newX += f * reference.x
-      newY += f * reference.y
-    }
+    if(neighborIds.length > 0) {
+      let newX = 0
+      let newY = 0
+      const wf = 1 / totalWeight 
+      for(let reference of references) {
+        const f = reference.weight * wf
+        newX += f * reference.x
+        newY += f * reference.y
+      }
 
-    let squareDistance = Math.pow(node.x - newX, 2) + Math.pow(node.y - newY, 2)
+      let squareDistance = Math.pow(node.x - newX, 2) + Math.pow(node.y - newY, 2)
 
-    node.x = node.x * payload.damping + newX * (1 - payload.damping) 
-    node.y = node.y * payload.damping + newY * (1 - payload.damping) 
+      node.x = node.x * payload.damping + newX * (1 - payload.damping) 
+      node.y = node.y * payload.damping + newY * (1 - payload.damping) 
 
-    const increasedDamping = payload.damping + dampingIncrease
-    if(increasedDamping < 1 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
-      for(let nId of neighborIds) {
-        dispatch(ActionTypes.RECALC_NODE_POSITION, {
-          nodeId: nId, 
-          damping: increasedDamping, 
-          dampingIncrease
-        }) 
+      const increasedDamping = payload.damping + dampingIncrease
+      if(increasedDamping < 1 && squareDistance > Math.pow(node.r * 0.1, 2) ) {
+        for(let nId of neighborIds) {
+          dispatch(ActionTypes.RECALC_NODE_POSITION, {
+            nodeId: nId, 
+            damping: increasedDamping, 
+            dampingIncrease
+          }) 
+        }
       }
     }
   }, 
@@ -397,6 +409,8 @@ export const actions: ActionTree<State, State> = {
   }, 
   [ActionTypes.ONCHAIN_CREATE_FLOW]({}, _payload: Messages.FlowCreation) {
     // only dispatched for aggregator plugin
+  }, 
+  [ActionTypes.ONCHAIN_BULK_CHANGE_FLOW]({}, _payload: Messages.BulkFlowChange) {
   }, 
   [ActionTypes.ONCHAIN_CHANGE_FLOW]({}, _payload: Messages.FlowChange) {
   }, 
@@ -487,6 +501,8 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {
     if(state.map.preventReleaseClick) { 
       state.map.preventReleaseClick = false
+    } else if(state.menu.open) {
+      state.menu.open = false
     } else {
       if(state.connectFrom !== undefined) {
         commit(MutationTypes.STOP_CONNECTING); 
@@ -495,6 +511,7 @@ export const actions: ActionTree<State, State> = {
       } else if(state.selectedFlow !== undefined) {
         commit(MutationTypes.DESELECT_FLOW); 
       } else {
+        state.menu.open = true
         dispatch(ActionTypes.CREATE_NODE, {
           x: state.map.mouse.x, 
           y: state.map.mouse.y, 
@@ -545,6 +562,7 @@ export const actions: ActionTree<State, State> = {
       dict: state.flows_into_from, 
       sign: -1
     }]
+    let flowChanges = []
     for(let run of runs) {
       if(run.dict[node.id] !== undefined) {
         for(let neighborId in run.dict[node.id]) {
@@ -554,10 +572,20 @@ export const actions: ActionTree<State, State> = {
             const f = dFactor(node, neighbor) * run.sign
             flow.changes.dx = (neighbor.x - node.x) / f
             flow.changes.dy = (neighbor.y - node.y) / f
-            dispatch(ActionTypes.COMMIT_FLOW, flow)
+            flowChanges.push({
+              id: {
+                ...flow.id
+              },
+              changes: {
+                ...flow.changes
+              }
+            }) 
           }
         }
       }
     }
+    dispatch(ActionTypes.ONCHAIN_BULK_CHANGE_FLOW, {
+      bulk: flowChanges
+    }) 
   }
 }

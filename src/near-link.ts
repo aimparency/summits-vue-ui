@@ -73,6 +73,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       'create_flow', 
       'change_flow',
       'remove_flow',
+      'bulk_change_flow'
     ], 
   }) as any;
 
@@ -108,7 +109,7 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
             store.dispatch(ActionTypes.RECALC_NODE_POSITION, {
               nodeId: nodeView.id,
               damping: 0, 
-              dampingIncrease: 1
+              dampingIncrease: 0.4
             })
             contract.get_node_flows({
               id: nodeId
@@ -205,20 +206,20 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
       ).then(
         (result: any) => {
           if('Ok' in result) {
+            store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, result.Err) 
+            store.commit(MutationTypes.REMOVE_FLOW, { ...flowCreation.id })
           }
-          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
         }, 
         (err: any) => {
           store.dispatch(ActionTypes.NEAR_ERROR, err)
-          store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowCreation.id)
+          store.commit(MutationTypes.REMOVE_FLOW, { ...flowCreation.id })
         }
       )
     } else if (action.type === ActionTypes.ONCHAIN_CHANGE_FLOW) {
       let flowChange = action.payload as Messages.FlowChange
       store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
-      console.log("changing connection") 
       contract.change_flow(
         flowChange
       ).then(
@@ -228,12 +229,44 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
           } else {
             store.dispatch(ActionTypes.TRANSACTION_ERROR, "failed to change flow. " + result.Err)
           }
-          console.log("changing connection done") 
           store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
         }, 
         (err: any) => {
           store.dispatch(ActionTypes.NEAR_ERROR, "failed to change flow. " + err)
           store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+        }
+      )
+    } else if (action.type === ActionTypes.ONCHAIN_BULK_CHANGE_FLOW) {
+      let bulkFlowChange = action.payload as Messages.BulkFlowChange
+      console.log("bulk changing connection") 
+      for(let flowChange of bulkFlowChange.bulk) {
+        store.commit(MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+      }
+      contract.bulk_change_flow(
+        bulkFlowChange
+      ).then(
+        (result: any) => {
+          if('Ok' in result) {
+            for(let flowChange of bulkFlowChange.bulk) {
+              store.commit(MutationTypes.APPLY_FLOW_CHANGES, flowChange.id)
+            }
+          } else {
+            store.dispatch(
+              ActionTypes.TRANSACTION_ERROR, 
+              "failed to change at least one flow. " + result.Err
+            )
+          }
+          console.log("bulk changing connection done") 
+
+          for(let flowChange of bulkFlowChange.bulk) {
+            store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+          }
+        }, 
+        (err: any) => {
+          store.dispatch(ActionTypes.NEAR_ERROR, "failed to change flow. " + err)
+          for(let flowChange of bulkFlowChange.bulk) {
+            store.commit(MutationTypes.DECREASE_FLOW_PENDING_TRANSACTIONS, flowChange.id)
+          }
         }
       )
     } else if(action.type === ActionTypes.COMMIT_REMOVE_NODE) {

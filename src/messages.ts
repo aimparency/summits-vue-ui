@@ -54,3 +54,6 @@ export interface FlowView {
   share: number
 }
 
+export interface BulkFlowChange {
+  bulk: FlowChange[]
+}

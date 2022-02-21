@@ -3,7 +3,7 @@
     <h4> flow details </h4>
   </SideMenuHeader>
   <SideMenuContent class='flow-details'>
-    <h3>
+    <span class="headline">
       <button 
         @click='selectFromNode'
         class='standard'> {{ fromTitle }} </button> 
@@ -11,7 +11,7 @@
       <button 
         @click='selectIntoNode'
         class='standard'> {{ intoTitle }} </button>
-    </h3>
+    </span>
     <Slider 
       name='share'
       left='0'
@@ -148,15 +148,21 @@ export default defineComponent({
 <style scoped lang="less">
 @import '~@/global.less'; 
 
-.node-details{
+h4 {
+  font-size: 1rem;
+  margin: 0; 
+  padding: 0; 
+  text-align: center;
+}
+
+.flow-details{
   color: @foreground; 
   text-align: center;
+  .headline{
+    font-weight: bold; 
+  }
   h3 {
     margin: 1rem 0rem; 
-  }
-  h4 {
-    font-size: 1rem;
-    text-align: center;
   }
   .title{
     font-size: 1.5rem;

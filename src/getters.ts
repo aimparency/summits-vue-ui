@@ -9,7 +9,7 @@ export const getters: GetterTree<State, State> = {
   nodeColor: (state: State) => (node_id: string) => {
     let node = state.nodes[node_id]
     if (node.unpublished == true) {
-      return '#777'
+      return '#888'
     } else if(node.subLevel < 0) {
       return '#444'
     } else {
