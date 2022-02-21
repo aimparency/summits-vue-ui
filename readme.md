@@ -1,12 +1,13 @@
 # summits-vue-ui
+This is a UI for summits. 
+It connects to a NEAR blockchain and interacts through a smart contract. 
+It allows users to create and edit projects (nodes) and flows (edges). 
 
-## Project setup
+You probably want to check out the __blockchain-only__ branch. 
+
+## development setup
 
 ### install dependecies 
-
-Clone this repo. 
-You probably want to check out __blockchain-only__ branch. 
-
 ```
 yarn install
 ```
@@ -18,6 +19,7 @@ In case you are using kurtosis for spinning up a localnet, copy the variables fr
 
 Specify the contract account id in `./.env`.
 
+## Vue scripts
 ### Compiles and hot-reloads for development
 ```
 yarn serve
