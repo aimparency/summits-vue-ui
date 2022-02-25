@@ -19,13 +19,17 @@ export interface Node {
    */
   subLevel: number, 
   unpublished: boolean, 
-  changes: NodeChanges
+  changes: NodeChanges, 
+  state: NodeState, 
 }
+
+export type NodeState = "open" | "in progress" | "submitted"  // approvals are a separate entity 
 
 export interface NodeChanges {
   title?: string, 
   notes?: string, 
-  deposit?: number
+  deposit?: number, 
+  state?: NodeState
 }
 
 export function createDefaultNode() : Node {
@@ -43,7 +47,8 @@ export function createDefaultNode() : Node {
     changes: {
     }, 
     deposit: 1, 
-    subLevel: -1
+    subLevel: -1, 
+    state: "open"
   }
 }
 

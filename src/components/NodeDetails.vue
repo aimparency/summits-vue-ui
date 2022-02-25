@@ -11,6 +11,12 @@
       placeholder="<node title>"
       @keypress="keypress"
       @input="updateTitle"/>
+    <MultiSwitch
+      label="state"
+      :value="state"
+      :options="stateOptions" 
+      @change='updateState'
+      />
     <textarea 
       ref="notes"
       class='standard notes' 
@@ -72,6 +78,7 @@ import { Node, Flow } from '@/types';
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
 import Slider from './Slider.vue'; 
+import MultiSwitch from './MultiSwitch.vue'; 
 
 export default defineComponent({
   name: 'NodeDetails',
@@ -79,13 +86,28 @@ export default defineComponent({
     SideMenuHeader,
     SideMenuContent, 
     Slider, 
+    MultiSwitch, 
   },
   data() {
     return {
       sliderOrigin: {
         deposit: 0
       }, 
-      confirmRemove: false 
+      confirmRemove: false, 
+      stateOptions: [
+        {
+          value: "open", 
+          color: "#288"
+        }, 
+        {
+          value: "in progress", 
+          color: "#941", 
+        }, 
+        { 
+          value: "submitted", 
+          color: "#128", 
+        }
+      ]
     }
   }, 
   props: {
@@ -109,6 +131,9 @@ export default defineComponent({
     }, 
     title() : string {
       return this.node.changes.title ?? this.node.title
+    }, 
+    state() : string {
+      return this.node.changes.state ?? this.node.state
     }, 
     notes() : string {
       return this.node.changes.notes ?? this.node.notes
@@ -152,6 +177,13 @@ export default defineComponent({
       this.$store.commit(MutationTypes.CHANGE_NODE_DEPOSIT, {
         node: this.node, 
         newDeposit: v
+      })
+    }, 
+    updateState(v: string) {
+      console.log("chaning state to...", v)
+      this.$store.commit(MutationTypes.CHANGE_NODE_STATE, {
+        node: this.node, 
+        newState: v
       })
     }, 
     updateTitle(e: Event) {

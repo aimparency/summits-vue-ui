@@ -12,17 +12,21 @@
 
 @clickableBoxShadow: 0 0 1.5rem #0008;
 
-button.standard {
+.buttonlike {
   box-sizing: border-box; 
   border: none; 
-  margin: 0.5rem 0.2rem 1rem 0.2rem; 
-  color: @background; 
-  background-color: shade(@foreground, 20%); 
-  font-size: 1rem;
   padding: 1rem; 
   border-radius: 2 * @roundsize; 
   box-shadow: @clickableBoxShadow; 
   cursor: pointer; 
+}
+
+button.standard {
+  .buttonlike();
+  margin: 0.5rem 0.2rem 1rem 0.2rem; 
+  color: @background; 
+  background-color: shade(@foreground, 20%); 
+  font-size: 1rem;
   &.confirm {
     background-color: @danger; 
   }

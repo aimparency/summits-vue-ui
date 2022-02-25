@@ -232,7 +232,8 @@ export const actions: ActionTree<State, State> = {
         id: node.id, 
         title: node.changes.title ?? node.title, 
         notes: node.changes.notes ?? node.notes, 
-        deposit: node.changes.deposit ?? node.deposit
+        deposit: node.changes.deposit ?? node.deposit, 
+        state: node.changes.state ?? node.state
       }) 
     } else {
       dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {
