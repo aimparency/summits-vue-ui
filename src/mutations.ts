@@ -12,6 +12,7 @@ import {
 import { Vector2 } from 'three'
 
 import * as Messages from '@/messages'
+import { nodeColor } from './tools/node-color'
 
 export enum MutationTypes {
   UPDATE_MOUSE_MAP_POSITION = 'UPDATE_MOUSE_MAP_POSITION', 
@@ -159,6 +160,7 @@ export const mutations: MutationTree<State> = {
         notes: nodeView.notes, 
         deposit: nodeView.deposit, 
         updatePending: false, 
+        color: nodeColor(nodeView.id), 
         r: nodeView.deposit
       }) 
     } else {
@@ -195,6 +197,7 @@ export const mutations: MutationTree<State> = {
     let node = state.nodes[nodeId]
     if(node) {
       node.unpublished = false
+      node.color = nodeColor(nodeId) 
     }
   }, 
   [MutationTypes.INCREASE_FLOW_PENDING_TRANSACTIONS](state, flowId: FlowId) {

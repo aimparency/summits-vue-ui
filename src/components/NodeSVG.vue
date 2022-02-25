@@ -6,7 +6,7 @@
       :transform="scale">
       <circle 
         :class="{selected, loading, placeholder}"
-        :fill="fillColor" 
+        :fill="node.color" 
         cx="0" 
         cy="0" 
         r="1"
@@ -114,9 +114,6 @@ export default defineComponent({
     showTools() : boolean {
       return this.selected && this.$store.state.connectFrom == undefined; 
     }, 
-    fillColor() : string {
-      return this.$store.getters.nodeColor(this.node.id)
-    }
   },
   methods: {
     select() {

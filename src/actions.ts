@@ -6,6 +6,7 @@ import { Flow, Node, createDefaultFlow, createDefaultNode, FlowId } from '@/type
 
 import { ActionTree } from 'vuex';
 import { MutationTypes } from './mutations';
+import { nodeColor } from './tools/node-color';
 
 const MAX_SUB_LEVEL = 2;  
 
@@ -149,6 +150,7 @@ export const actions: ActionTree<State, State> = {
       deposit: knownNode.deposit, 
       r: knownNode.deposit, // best estimate
       id: payload.newNodeId, 
+      color: nodeColor(payload.newNodeId), 
       x: payload.x, 
       y: payload.y,
     }

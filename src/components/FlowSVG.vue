@@ -15,6 +15,8 @@ import { Flow } from '@/types';
 
 import { ActionTypes } from '@/actions';
 
+import { NODE_COLORS } from '@/tools/node-color';
+
 import makeCircularPath from '@/tools/make-circular-path';
 
 export default defineComponent({
@@ -33,9 +35,14 @@ export default defineComponent({
     fillColor() : string {
       const selectedNode = this.$store.state.selectedNode;
       if ( selectedNode && selectedNode.id == this.flow.id.from) {
-        return '#ccc'; 
+        return NODE_COLORS.selected; 
       } else {
-        return this.$store.getters.nodeColor(this.flow.id.from); 
+        let from = this.$store.state.nodes[this.flow.id.from]
+        if(from) {
+          return from.color
+        } else {
+          return NODE_COLORS.unloaded
+        }
       }
     }, 
     path() : string {

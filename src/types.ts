@@ -9,6 +9,7 @@ export interface Node {
   x: number, 
   y: number, 
   r: number, 
+  color: string, 
   /**
    * @subLevel
    * seven summits: 2
@@ -33,6 +34,7 @@ export function createDefaultNode() : Node {
     x: 0,
     y: 0, 
     r: 1, 
+    color: "#888", 
     title: "", 
     notes: "", 
     unpublished: false, 

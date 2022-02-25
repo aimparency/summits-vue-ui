@@ -81,7 +81,7 @@ export default defineComponent({
   border-bottom-left-radius: 1rem;
   border-top-left-radius: 1rem;
   max-height: calc(100vh - 1em); 
-  top: 1em;
+  top: 1.0em;
   margin: 0; 
   box-shadow: 0 0 4em black; 
   &.full{

@@ -78,7 +78,7 @@ export default defineComponent({
   components: {
     SideMenuHeader,
     SideMenuContent, 
-    Slider
+    Slider, 
   },
   data() {
     return {
