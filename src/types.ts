@@ -1,3 +1,144 @@
+ //  export type Unit = 'c' | 'y' | 'o' | 'w' | 'd' | 'h' | 'i' | 's'
+
+interface Factors {
+  [unit: string]: {
+    smallest: string, 
+    factors: {
+      [unit: string]: number
+    }, 
+    beginning: string, 
+    singular: string, 
+    plural: string, 
+
+  }
+}
+
+export class Effort {
+  unit: string = 'c'
+  amount: number = 0
+
+  static fulls = ['century', 'year', 'month', 'week', 'day', 'hour', 'minute', 'second']
+  static plural = ['centuries', 'years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']
+  static units: Factors = {
+    c: {
+      factors: {
+        y: 100, 
+      },
+      smallest: 'y', 
+      beginning: 'c', 
+      singular: 'centuryu', 
+      plural: 'centuries'
+    }, 
+    y: {
+      factors: {
+        o: 12, 
+        w: 52, 
+        d: 365, 
+      },
+      smallest: 'd', 
+      beginning: 'y', 
+      singular: 'year', 
+      plural: 'years'
+    }, 
+    o: {
+      factors: {
+        w: 4, 
+        d: 30, 
+      }, 
+      smallest: 'd', 
+      beginning: 'mo', 
+      singular: 'month', 
+      plural: 'months'
+    }, 
+    w: {
+      factors: {
+        d: 7, 
+      }, 
+      smallest: 'd', 
+      beginning: 'w', 
+      singular: 'week', 
+      plural: 'weeks'
+    }, 
+    d: {
+      factors: {
+        h: 24
+      }, 
+      smallest: 'h', 
+      beginning: 'd', 
+      singular: 'day', 
+      plural: 'days'
+    }, 
+    h: {
+      factors: {
+        i: 60, 
+      }, 
+      smallest: 'i', 
+      beginning: 'h', 
+      singular: 'hour', 
+      plural: 'hours'
+    }, 
+    i: {
+      factors: {
+        s: 60, 
+      }, 
+      smallest: 's', 
+      beginning: 'mi', 
+      singular: 'minute', 
+      plural: 'miuntes'
+    }
+  }  
+
+  static fromString(s: string) : Effort {
+    let smallestUnit = 'c'
+    let efforts: Effort[] = []
+    Object.keys(Effort.units).forEach(unitChar => {
+      let unit = Effort.units[unitChar]
+      let match = s.match(new RegExp('(\\d+\\.?\\d*)\\s*' + unit.beginning))
+      if(match !== null) {
+        let amount = parseFloat(match[1])
+        efforts.push(new Effort(
+          unitChar, 
+          amount
+        ))
+        smallestUnit = unitChar
+      }
+    })
+    let totalAmount = 0
+    for(let effort of efforts) {
+      effort.convert(smallestUnit) 
+      totalAmount += effort.amount
+    }
+    return new Effort(
+      smallestUnit, 
+      totalAmount
+    )
+  }
+
+  constructor(unit: string, amount: number) {
+    this.unit = unit
+    this.amount = amount
+  }
+
+  convert(targetUnit: string) {
+    while(!(targetUnit in Effort.units[this.unit])) {
+      if(this.unit == "s") {
+        console.error("failed to convert Effort") 
+        return 
+      } else {
+        let convInfo = Effort.units[this.unit]
+        this.convert(convInfo.smallest)
+      }
+    }
+    this.amount *= Effort.units[this.unit].factors[targetUnit]
+  }
+
+  humanize() : string {
+    return this.amount.toString() + (
+      this.amount == 1 ? Effort.units[this.unit].singular : Effort.units[this.unit].plural
+    )
+    
+  }
+}
 
 export interface Node {
   id: string, 
@@ -21,6 +162,7 @@ export interface Node {
   unpublished: boolean, 
   changes: NodeChanges, 
   state: NodeState, 
+  effort: Effort, 
 }
 
 export type NodeState = "open" | "in progress" | "submitted"  // approvals are a separate entity 
@@ -48,7 +190,8 @@ export function createDefaultNode() : Node {
     }, 
     deposit: 1, 
     subLevel: -1, 
-    state: "open"
+    state: "open", 
+    effort: new Effort('w', 1)
   }
 }
 
