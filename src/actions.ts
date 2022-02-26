@@ -65,7 +65,7 @@ export enum ActionTypes {
 
   RECALC_NODE_POSITION = 'RECALC_NODE_POSITION', 
 
-  PERSIST_NODE_POSITION = 'PERSIST_NODE_POSITION'
+  PERSIST_NODE_POSITION = 'PERSIST_NODE_POSITION', 
 }
 
 
@@ -233,7 +233,8 @@ export const actions: ActionTree<State, State> = {
         title: node.changes.title ?? node.title, 
         notes: node.changes.notes ?? node.notes, 
         deposit: node.changes.deposit ?? node.deposit, 
-        state: node.changes.state ?? node.state
+        state: node.changes.state ?? node.state, 
+        effort: node.changes.effort ?? node.effort, 
       }) 
     } else {
       dispatch(ActionTypes.ONCHAIN_CHANGE_NODE, {

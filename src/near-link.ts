@@ -12,6 +12,8 @@ import nearConfig from './near-config';
 import { ActionTypes } from './actions'; 
 import { MutationTypes } from './mutations'; 
 
+import { Effort } from './types';
+
 import * as Messages from '@/messages'; 
 
 export default function createNearLink () {
@@ -106,6 +108,10 @@ function onConnection(near: Near, store: Store<State>, contractAccountId: string
         (result:any) => {
           if('Ok' in result) {
             let nodeView = result.Ok as Messages.NodeView
+            nodeView.effort = new Effort(
+              String.fromCharCode(nodeView.effort.unit), 
+              nodeView.effort.amount
+            )
             store.commit(MutationTypes.SET_NODE_DATA, nodeView) 
             store.dispatch(ActionTypes.RECALC_NODE_POSITION, {
               nodeId: nodeView.id,

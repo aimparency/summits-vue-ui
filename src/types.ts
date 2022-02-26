@@ -2,25 +2,26 @@
 
 interface Factors {
   [unit: string]: {
-    smallest: string, 
+    code: number, 
+    smallest: string | undefined,
     factors: {
       [unit: string]: number
     }, 
     beginning: string, 
     singular: string, 
     plural: string, 
-
   }
 }
 
 export class Effort {
-  unit: string = 'c'
+  unit: number = 'c'.charCodeAt(0)
   amount: number = 0
 
   static fulls = ['century', 'year', 'month', 'week', 'day', 'hour', 'minute', 'second']
   static plural = ['centuries', 'years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']
-  static units: Factors = {
+  static unitInfo: Factors = {
     c: {
+      code: 'c'.charCodeAt(0), 
       factors: {
         y: 100, 
       },
@@ -30,6 +31,7 @@ export class Effort {
       plural: 'centuries'
     }, 
     y: {
+      code: 'y'.charCodeAt(0), 
       factors: {
         o: 12, 
         w: 52, 
@@ -41,6 +43,7 @@ export class Effort {
       plural: 'years'
     }, 
     o: {
+      code: 'o'.charCodeAt(0), 
       factors: {
         w: 4, 
         d: 30, 
@@ -51,6 +54,7 @@ export class Effort {
       plural: 'months'
     }, 
     w: {
+      code: 'w'.charCodeAt(0), 
       factors: {
         d: 7, 
       }, 
@@ -60,6 +64,7 @@ export class Effort {
       plural: 'weeks'
     }, 
     d: {
+      code: 'd'.charCodeAt(0), 
       factors: {
         h: 24
       }, 
@@ -69,6 +74,7 @@ export class Effort {
       plural: 'days'
     }, 
     h: {
+      code: 'h'.charCodeAt(0), 
       factors: {
         i: 60, 
       }, 
@@ -78,6 +84,7 @@ export class Effort {
       plural: 'hours'
     }, 
     i: {
+      code: 'i'.charCodeAt(0), 
       factors: {
         s: 60, 
       }, 
@@ -85,16 +92,26 @@ export class Effort {
       beginning: 'mi', 
       singular: 'minute', 
       plural: 'miuntes'
+    }, 
+    s: {
+      code: 's'.charCodeAt(0), 
+      factors: {
+      }, 
+      smallest: undefined, 
+      beginning: 's', 
+      singular: 'second', 
+      plural: 'seconds' 
     }
   }  
 
   static fromString(s: string) : Effort {
     let smallestUnit = 'c'
     let efforts: Effort[] = []
-    Object.keys(Effort.units).forEach(unitChar => {
-      let unit = Effort.units[unitChar]
+    Object.keys(Effort.unitInfo).forEach(unitChar => {
+      let unit = Effort.unitInfo[unitChar]
       let match = s.match(new RegExp('(\\d+\\.?\\d*)\\s*' + unit.beginning))
       if(match !== null) {
+        console.log("match", match[1]) 
         let amount = parseFloat(match[1])
         efforts.push(new Effort(
           unitChar, 
@@ -103,6 +120,7 @@ export class Effort {
         smallestUnit = unitChar
       }
     })
+    console.log("smallest unit", smallestUnit) 
     let totalAmount = 0
     for(let effort of efforts) {
       effort.convert(smallestUnit) 
@@ -114,29 +132,50 @@ export class Effort {
     )
   }
 
-  constructor(unit: string, amount: number) {
-    this.unit = unit
+  constructor(unitChar: string, amount: number) {
+    this.unit = unitChar.charCodeAt(0)
     this.amount = amount
   }
 
-  convert(targetUnit: string) {
-    while(!(targetUnit in Effort.units[this.unit])) {
-      if(this.unit == "s") {
-        console.error("failed to convert Effort") 
-        return 
+  static getConversionFactor(biggerUnit: string, smallerUnit: string) : null | number {
+    let unitInfo = Effort.unitInfo[biggerUnit]
+    let factor = unitInfo.factors[smallerUnit]
+    if(factor) {
+      return factor
+    } else {
+      let smallest = unitInfo.smallest
+      if (smallest) {
+        let factor1 = unitInfo.factors[smallest]
+        let factor2 = Effort.getConversionFactor(smallest, smallerUnit)
+        if(factor2) {
+          return factor1 * factor2
+        } else {
+          return null
+        }
       } else {
-        let convInfo = Effort.units[this.unit]
-        this.convert(convInfo.smallest)
+        return null
       }
+    }  
+  }
+
+  convert(targetUnit: string) {
+    let unit = String.fromCharCode(this.unit)
+    let factor = Effort.getConversionFactor(unit, targetUnit)
+    if(factor) {
+      this.amount *= factor
+      this.unit = targetUnit.charCodeAt(0)
     }
-    this.amount *= Effort.units[this.unit].factors[targetUnit]
   }
 
   humanize() : string {
-    return this.amount.toString() + (
-      this.amount == 1 ? Effort.units[this.unit].singular : Effort.units[this.unit].plural
+    let unit = Effort.unitInfo[String.fromCharCode(this.unit)]
+    return this.amount.toString() + " " + (
+      this.amount == 1 ? unit.singular : unit.plural
     )
-    
+  }
+
+  eq(other: Effort) : boolean {
+    return this.amount == other.amount && this.unit == other.unit
   }
 }
 
@@ -171,7 +210,8 @@ export interface NodeChanges {
   title?: string, 
   notes?: string, 
   deposit?: number, 
-  state?: NodeState
+  state?: NodeState, 
+  effort?: Effort
 }
 
 export function createDefaultNode() : Node {

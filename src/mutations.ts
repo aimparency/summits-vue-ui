@@ -7,7 +7,8 @@ import {
   FlowId, 
   NearStatus, 
   createDefaultNode, 
-  NodeState
+  NodeState, 
+  Effort
 } from './types'
 
 import { Vector2 } from 'three'
@@ -29,6 +30,7 @@ export enum MutationTypes {
   CHANGE_NODE_NOTES = 'CHANGE_NODE_NOTES', 
   CHANGE_NODE_DEPOSIT = 'CHANGE_NODE_DEPOSIT', 
   CHANGE_NODE_STATE = 'CHANGE_NODE_STATE', 
+  CHANGE_NODE_EFFORT = 'CHANGE_NODE_EFFORT', 
   RESET_NODE_CHANGES = 'RESET_NODE_CHANGES', 
 
   CHANGE_FLOW_NOTES = 'CHANGE_FLOW_NOTES', 
@@ -130,6 +132,13 @@ export const mutations: MutationTree<State> = {
       payload.node.changes.state = payload.newState
     }
   }, 
+  [MutationTypes.CHANGE_NODE_EFFORT](_state, payload: {node: Node, newEffort: Effort}) {
+    if(payload.node.effort.eq(payload.newEffort)) {
+      delete payload.node.changes.effort
+    } else {
+      payload.node.changes.effort = payload.newEffort
+    }
+  }, 
   [MutationTypes.CHANGE_FLOW_SHARE](_state, payload: {flow: Flow, newShare: number}) {
     if(payload.flow.share === payload.newShare) {
       delete payload.flow.changes.share 
@@ -169,6 +178,7 @@ export const mutations: MutationTree<State> = {
         notes: nodeView.notes, 
         deposit: nodeView.deposit, 
         state: nodeView.state, 
+        effort: nodeView.effort, 
         updatePending: false, 
         color: nodeColor(nodeView.id), 
         r: nodeView.deposit

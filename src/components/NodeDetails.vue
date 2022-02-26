@@ -11,7 +11,14 @@
       placeholder="<node title>"
       @keypress="keypress"
       @input="updateTitle"/>
+    <input 
+      class='standard effort' 
+      :value="effortString ?? effort" 
+      @blur='parseAndUpdateEffort'
+      onfocus="this.select();" 
+      @input="effortChange"/>
     <MultiSwitch
+      class='state'
       label="state"
       :value="state"
       :options="stateOptions" 
@@ -73,7 +80,11 @@ import { defineComponent, PropType } from 'vue';
 import { MutationTypes } from '@/mutations';
 import { ActionTypes } from '@/actions';
 
-import { Node, Flow } from '@/types';
+import { 
+  Node, 
+  Flow, 
+  Effort
+} from '@/types';
 
 import SideMenuHeader from './SideMenuHeader.vue'; 
 import SideMenuContent from './SideMenuContent.vue'; 
@@ -107,7 +118,18 @@ export default defineComponent({
           value: "submitted", 
           color: "#128", 
         }
-      ]
+      ],
+      effortString: undefined
+    } as {
+      sliderOrigin: {
+        deposit: number
+      }, 
+      confirmRemove: boolean, 
+      stateOptions: {
+        value: string, 
+        color: string
+      }[], 
+      effortString: string | undefined
     }
   }, 
   props: {
@@ -128,6 +150,13 @@ export default defineComponent({
         this.node.unpublished || 
         Object.keys(this.node.changes).length > 0 
       ) 
+    }, 
+    effort() : string {
+      if(this.node.changes.effort) {
+        return this.node.changes.effort.humanize()
+      } else {
+        return this.node.effort.humanize()
+      }
     }, 
     title() : string {
       return this.node.changes.title ?? this.node.title
@@ -180,7 +209,6 @@ export default defineComponent({
       })
     }, 
     updateState(v: string) {
-      console.log("chaning state to...", v)
       this.$store.commit(MutationTypes.CHANGE_NODE_STATE, {
         node: this.node, 
         newState: v
@@ -191,6 +219,20 @@ export default defineComponent({
         node: this.node, 
         newTitle: (<HTMLInputElement>e.target).value
       })
+    }, 
+    effortChange(e: Event) {
+      this.effortString = (e.target as HTMLInputElement).value
+    }, 
+    parseAndUpdateEffort() {
+      if(this.effortString !== undefined) {
+        let newEffort = Effort.fromString(this.effortString)
+        console.log(newEffort) 
+        this.$store.commit(MutationTypes.CHANGE_NODE_EFFORT, {
+          node: this.node, 
+          newEffort
+        }) 
+        this.effortString = undefined
+      }
     }, 
     updateNotes(e: Event) {
       const target = <HTMLTextAreaElement>e.target
@@ -250,6 +292,12 @@ h4 {
   .title{
     font-size: 1.5rem;
     margin:0.5rem 0rem; 
+  }
+  .effort {
+    margin: 0.5rem 0rem; 
+  }
+  .state {
+    margin: 0.3rem 0rem; 
   }
   .notes {
     height: 10em; 

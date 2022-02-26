@@ -1,4 +1,7 @@
-import { NodeChanges, FlowChanges, FlowId, NodeState } from './types'
+import { 
+  Effort, 
+  NodeChanges, FlowChanges, FlowId, NodeState 
+} from './types'
 
 // Nodes 
   // Out
@@ -8,6 +11,7 @@ export interface NodeCreation {
   notes: string, 
   deposit: number, 
   state: string,
+  effort: Effort, 
 }
 
 export interface NodeChange {
@@ -25,6 +29,7 @@ export interface NodeView {
   notes: string, 
   deposit: number, 
   state: NodeState, 
+  effort: Effort, 
   owner: string, 
 }
 
