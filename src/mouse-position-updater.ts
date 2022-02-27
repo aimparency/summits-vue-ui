@@ -8,7 +8,6 @@ import { Node } from '@/types';
 
 export default function createMousePositionUpdater() {
   return (store: Store<State>) => {
-
     const pageToSVGCoords = (x: number, y: number) : Vector2 => {
       const map = store.state.map; 
       let halfSide, xOffset, yOffset
@@ -26,17 +25,19 @@ export default function createMousePositionUpdater() {
         ((y - yOffset) / halfSide - 1) / map.scale + map.offset.y
       )
     }
+
     window.addEventListener("mousemove", (e: MouseEvent) => {
-      store.commit(
-        MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
-        pageToSVGCoords(e.pageX, e.pageY)
-      )
-      if(store.state.map.panBeginning !== undefined) {
-        updatePan(e.pageX, e.pageY); 
-      } else if (store.state.map.dragBeginning) {
-        updateDrag(e.pageX, e.pageY); 
-      }
+      updateWhatever(e.pageX, e.pageY); 
     });
+
+    let touchStuff = {
+      count: 0, 
+      dragFingerId: 0, 
+      pinchAndZoomFingerIds: {
+        a: 0, 
+        b: 0
+      }
+    }
 
     window.addEventListener("wheel", (e: WheelEvent) => {
       const map = store.state.map
@@ -47,6 +48,18 @@ export default function createMousePositionUpdater() {
       let delta = mouseAfter.clone().sub(mouseBefore)
       map.offset.sub(delta) 
     })
+    
+    const updateWhatever = (x: number, y: number) : void => {
+      store.commit(
+        MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
+        pageToSVGCoords(x, y)
+      )
+      if(store.state.map.panBeginning !== undefined) {
+        updatePan(x, y); 
+      } else if (store.state.map.dragBeginning) {
+        updateDrag(x, y); 
+      }
+    }
 
     const updatePan = (x: number, y: number) => {
       const pb = store.state.map.panBeginning; 
@@ -96,18 +109,27 @@ export default function createMousePositionUpdater() {
         initialPosition: new Vector2(node.x, node.y) 
       }
     }
-    const endPan = (x: number, y: number) => {
-      updatePan(x,y);
+
+    const endWhatever = () : void => {
+      if(store.state.map.panBeginning) {
+        endPan(); 
+      } else if (store.state.map.dragBeginning) {
+        endDrag();
+      }
+    }
+
+    const endPan = () => {
       delete store.state.map.panBeginning; 
     }
-    const endDrag = (x: number, y: number) => {
-      updateDrag(x,y);  
+
+    const endDrag = () => {
       if(store.state.map.preventReleaseClick && store.state.dragCandidate) {
         store.dispatch(ActionTypes.PERSIST_NODE_POSITION, store.state.dragCandidate)
       }
       delete store.state.map.dragBeginning; 
       delete store.state.dragCandidate; 
     }
+
     window.addEventListener("mousedown", (e: MouseEvent) => {
       if(store.state.dragCandidate) {
         beginDrag(store.state.dragCandidate, e.pageX, e.pageY)
@@ -115,20 +137,65 @@ export default function createMousePositionUpdater() {
         beginPan(e.pageX, e.pageY) 
       }
     })
+
     window.addEventListener("mouseup", (e: MouseEvent) => {
-      if(store.state.map.panBeginning) {
-        endPan(e.pageX, e.pageY); 
-      } else if (store.state.map.dragBeginning) {
-        endDrag(e.pageX, e.pageY);
+      updateWhatever(e.pageX, e.pageY)
+      endWhatever() 
+    })
+
+    window.addEventListener("touchstart", (e: TouchEvent) => { 
+      if(e.touches.length > 0) {
+        if(e.touches.length > 1) {
+          // 2 or more touches         
+          if(touchStuff.count < 2) {
+            console.log("more than 1 touch!") 
+          }
+        } else {
+          // 1 touch
+          if(touchStuff.count == 0) {
+            // new touch 
+            touchStuff.count = 1
+            touchStuff.dragFingerId = e.touches[0].identifier
+            if(store.state.dragCandidate) {
+              beginDrag(store.state.dragCandidate, e.touches[0].pageX, e.touches[0].pageY)
+            } else {
+              beginPan(e.touches[0].pageX, e.touches[0].pageY)
+            }
+          } else if (touchStuff.count > 1) {
+            // from 2 or more to 1
+            // endPinch()
+          }
+        }
+      }
+    });
+
+    window.addEventListener("touchmove", (e: TouchEvent) => { 
+      if(touchStuff.count == 1) {
+        let touch = e.touches[0]
+        updateWhatever(touch.pageX, touch.pageY)
+      } else if (touchStuff.count > 1) {
+        // update pinch
       }
     })
+
+    window.addEventListener("touchend", (e: TouchEvent) => { 
+      if(touchStuff.count == 1) {
+        touchStuff.count = 0
+        endWhatever()
+      }
+    })
+
+    window.addEventListener("touchcancel", (e: TouchEvent) => { 
+    })
+
     window.addEventListener("click", (e: MouseEvent) => {
       store.commit(
         MutationTypes.UPDATE_MOUSE_MAP_POSITION, 
         pageToSVGCoords(e.pageX, e.pageY)
       )
       store.dispatch(ActionTypes.NOWHERE_CLICK)
-    })
+    });
+
   }
 }
 

@@ -12,6 +12,7 @@
         r="1"
         @click.stop='select'
         @mousedown='setDragCandidate'
+        @touchstart='setDragCandidate'
       />
       <!--text
         y="-1.2"
@@ -19,7 +20,6 @@
         class="label debug">
         {{node.subLevel}}
       </text-->
-
       <text
         v-if="!placeholder" 
         dominant-baseline="central"
