@@ -456,6 +456,7 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.NODE_SVG_CLICK]({state, commit, dispatch}, node: Node) {
     if(state.map.preventReleaseClick) { 
       state.map.preventReleaseClick = false
+      console.log("unsetting prevent release click") 
     } else {
       if(state.connectFrom !== undefined) {
         if(node !== state.connectFrom) {
@@ -505,6 +506,7 @@ export const actions: ActionTree<State, State> = {
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {
     if(state.map.preventReleaseClick) { 
       state.map.preventReleaseClick = false
+      console.log("unsetting prevent release click") 
     } else if(state.menu.open) {
       state.menu.open = false
     } else {
