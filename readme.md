@@ -14,7 +14,10 @@ Also have a look at the smart contract code here: [github.com/aimparency/summits
 yarn install
 ```
 
+
 ### blockchain connection
+
+Copy `./src/near-kurtosis-output.ts.example` to `./src/near-kurtosis-output.ts`. 
 
 Edit `./src/near-config.ts` according to the NEAR network you want to connect with. 
 In case you are using kurtosis for spinning up a localnet, copy the variables from the kurtosis script ouput into `./src/near-kurtosis-output.ts`. 
