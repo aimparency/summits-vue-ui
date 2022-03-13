@@ -8,14 +8,14 @@
     <div 
       class='left'
       v-if="!$store.state.menu.open"
-      @click="toggle">
+      @click.stop="toggle">
       <span >
         &lt; 
       </span>
     </div>
     <div 
       v-if="$store.state.menu.open" 
-      @click='toggle' 
+      @click.stop='toggle' 
       class='right'>
       <span>
         &gt; 
@@ -46,7 +46,7 @@ export default defineComponent({
 @import '~@/global.less'; 
 
 .side-menu-header{
-  position: relative; 
+  height: 3.5rem; 
   .left, .right {
     text-align: center; 
     position: absolute; 

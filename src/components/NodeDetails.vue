@@ -15,7 +15,7 @@
       class='standard effort' 
       :value="effortString ?? effort" 
       @blur='parseAndUpdateEffort'
-      onfocus="this.select();" 
+      onfocus="this.select()" 
       @input="effortChange"/>
     <MultiSwitch
       class='state'
@@ -42,7 +42,7 @@
     <div v-if="node.pendingTransactions"> 
       <div class="spinner"></div>
     </div>
-    <div else>
+    <div v-else>
       <span v-if='dirty'>
         <button class='standard' v-if='dirty' @click="reset">reset</button>
         <button class='standard' v-if='dirty' @click="commit">commit</button>
@@ -257,7 +257,8 @@ export default defineComponent({
       this.resetSliderOrigin()
     }, 
     focusTitle() {
-      (this.$refs.title as HTMLInputElement).focus()
+      let titleInput = (this.$refs.title as HTMLInputElement)
+      titleInput?.focus()
     }, 
     resetSliderOrigin() {
       this.sliderOrigin.deposit = this.deposit

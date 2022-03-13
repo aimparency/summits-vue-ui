@@ -63,7 +63,7 @@ export function getDefault() : State {
       dragBeginning: undefined, 
     }, 
     menu: {
-      open: true, 
+      open: false, 
       showProfile: true
     }, 
     near: {

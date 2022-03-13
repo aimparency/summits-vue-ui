@@ -224,6 +224,7 @@ export const actions: ActionTree<State, State> = {
       unpublished: true
     }; 
 
+    commit(MutationTypes.OPEN_MENU)
     commit(MutationTypes.SELECT_NODE, node)
   }, 
   [ActionTypes.COMMIT_NODE]({dispatch}, node: Node) {
@@ -374,7 +375,7 @@ export const actions: ActionTree<State, State> = {
       }
     }
   }, 
-  [ActionTypes.CREATE_FLOW]({state, dispatch}, payload: {from: Node, into: Node}) {
+  [ActionTypes.CREATE_FLOW]({state, dispatch, commit}, payload: {from: Node, into: Node}) {
     const fInv = 1 / dFactor(payload.from, payload.into)
 
     let flow: Flow = {
@@ -481,7 +482,6 @@ export const actions: ActionTree<State, State> = {
       node.subLevel = MAX_SUB_LEVEL 
     }
     dispatch(ActionTypes.LOAD_NODE, node.id) // reload node on selection
-    commit(MutationTypes.OPEN_MENU)
     if(state.selectedFlow) {
       commit(MutationTypes.DESELECT_FLOW) 
     }
@@ -497,7 +497,6 @@ export const actions: ActionTree<State, State> = {
         }
       }
     }
-    commit(MutationTypes.OPEN_MENU)
     commit(MutationTypes.SELECT_FLOW, flow)
     if(state.selectedNode) {
       commit(MutationTypes.DESELECT_NODE) 

@@ -20,8 +20,17 @@
         class="label debug">
         {{node.subLevel}}
       </text-->
+      <text 
+        v-if="$store.state.connectFrom == node"
+        x="0"
+        y="0"
+        transform="scale(-1)"
+        dominant-baseline="central" text-anchor="middle"
+        font-size="2">
+        ⤽
+      </text>
       <text
-        v-if="!placeholder" 
+        v-else-if="!placeholder" 
         dominant-baseline="central"
         text-anchor="middle"
         class="label"
@@ -80,7 +89,7 @@ export default defineComponent({
     }, 
     scale() : string {
       let node = this.node
-      return `scale(${node.changes.deposit ?? node.r})`
+      return `scale(${node.changes.deposit ?? node.r ?? 0 })`
     }, 
     noTransition() : boolean {
       return this.node == this.$store.state.dragCandidate
@@ -155,12 +164,14 @@ export default defineComponent({
       fill: #555; 
     }
   }
-  text {
+  text{
     fill: #fff; 
-    font-size: 0.25px;
-    font-family: monospace;
     user-select: none; 
     pointer-events: none; 
+    &.label{
+      font-size: 0.25px;
+      font-family: monospace;
+    }
   }
 }
 

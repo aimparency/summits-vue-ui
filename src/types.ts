@@ -267,7 +267,7 @@ export function createDefaultFlow() : Flow {
     dx: 0, 
     dy: 0, 
     notes: "", 
-    share: 0.2, 
+    share: 0.1,
     changes: {}, 
     pendingTransactions: 0,
   }

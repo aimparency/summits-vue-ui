@@ -2,7 +2,9 @@
   <div 
     class="side-menu" 
     :class="classes"
-    @click.stop=""
+    @click.stop="$store.state.menu.open = true"
+    @mousewheel.stop=""
+    @touchstart.stop=""
     @mousedown.stop=""
   >
     <NodeDetails 
@@ -76,11 +78,11 @@ export default defineComponent({
   border-right: none; 
   box-sizing: border-box;
   text-align: left; 
-  left: calc(100vw - 3.25rem); 
-  transition: left 0.3s; 
+  left: calc(100vw - 3.7rem); 
+  transition: left 0.2s; 
   border-bottom-left-radius: 1rem;
   border-top-left-radius: 1rem;
-  max-height: calc(100vh - 1em); 
+  max-height: calc(100vh - 1rem); 
   top: 1.0em;
   margin: 0; 
   box-shadow: 0 0 4em black; 

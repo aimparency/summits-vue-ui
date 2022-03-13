@@ -1,11 +1,10 @@
 <template>
   <div 
     ref="container"
-    @mousewheel.stop="scroll"
+    v-if="$store.state.menu.open"
     class="container">
     <div 
       ref="content"
-      :style="{transform: `translate(0px, ${-scrollY}px)`}"
       class='side-menu-content'>
       <slot></slot>
     </div>
@@ -19,17 +18,7 @@ export default defineComponent({
   name: 'SearchBar',
   props: {
   }, 
-  data() {
-    return {
-      scrollY: 0 
-    }
-  }, 
   methods: {
-    scroll(e: WheelEvent) {
-      this.scrollY = Math.min(
-        Math.max(0, this.scrollY + e.deltaY), 
-      )
-    }
   }
 });
 </script>
@@ -39,9 +28,11 @@ export default defineComponent({
 @import '~@/global.less'; 
 
 .container {
-  overflow: hidden; 
+  max-height: calc(100vh - 4.5rem); 
+  overflow-y: auto; 
+  overflow-x: hidden; 
   .side-menu-content{
-    padding: 0 0.5rem; 
+    padding: 0 0.5rem 0.5rem 0.5rem; 
     color: @foreground; 
     text-align: center;
     input{
