@@ -57,7 +57,7 @@ export function getDefault() : State {
     map: {
       mouse: new Vector2(0,0), 
       offset: new Vector2(0,0),
-      scale: 0.1, 
+      scale: 0.07, 
       panBeginning: undefined, 
       preventReleaseClick: false, 
       dragBeginning: undefined, 

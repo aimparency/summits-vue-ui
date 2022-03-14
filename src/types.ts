@@ -27,7 +27,7 @@ export class Effort {
       },
       smallest: 'y', 
       beginning: 'c', 
-      singular: 'centuryu', 
+      singular: 'century', 
       plural: 'centuries'
     }, 
     y: {

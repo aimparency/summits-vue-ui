@@ -473,7 +473,11 @@ export const actions: ActionTree<State, State> = {
         }
         commit(MutationTypes.STOP_CONNECTING)
       } else {
-        dispatch(MutationTypes.SELECT_NODE, node)
+        if(node == state.selectedNode) {
+          state.menu.open = true
+        } else {
+          dispatch(ActionTypes.SELECT_NODE, node)
+        }
       }
     }
   }, 
@@ -488,18 +492,22 @@ export const actions: ActionTree<State, State> = {
     commit(MutationTypes.SELECT_NODE, node)
   },
   [ActionTypes.SELECT_FLOW]({state, dispatch, commit}, flow: Flow) {
-    for(let nodeId of [flow.id.from, flow.id.into]) {
-      let node = this.state.nodes[nodeId]
-      if(node) {
-        if(node.subLevel < 0) {
-          node.subLevel = 0
-          dispatch(ActionTypes.LOAD_NODE, nodeId)
+    if(state.selectedFlow == flow) {
+      state.menu.open = true
+    } else {
+      for(let nodeId of [flow.id.from, flow.id.into]) {
+        let node = this.state.nodes[nodeId]
+        if(node) {
+          if(node.subLevel < 0) {
+            node.subLevel = 0
+            dispatch(ActionTypes.LOAD_NODE, nodeId)
+          }
         }
       }
-    }
-    commit(MutationTypes.SELECT_FLOW, flow)
-    if(state.selectedNode) {
-      commit(MutationTypes.DESELECT_NODE) 
+      commit(MutationTypes.SELECT_FLOW, flow)
+      if(state.selectedNode) {
+        commit(MutationTypes.DESELECT_NODE) 
+      }
     }
   }, 
   [ActionTypes.NOWHERE_CLICK]({state, commit, dispatch}) {

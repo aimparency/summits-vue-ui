@@ -1,6 +1,6 @@
 import kurtosisVars from './near-kurtosis-output'
 
-const NETWORK = 'kurtosis' 
+const NETWORK = 'testnet' 
 
 const configs = {
   kurtosis: {

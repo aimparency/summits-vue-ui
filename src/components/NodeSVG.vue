@@ -96,6 +96,9 @@ export default defineComponent({
     }, 
     titleLines() : string[] {
       let title = this.node.changes.title ?? this.node.title
+      if(title.indexOf("\\") !== -1 ) {
+        return title.split("\\").map(line => line.trim())
+      } 
       let length = title.length; 
       let lines: string[] = []; 
       let offset = 0; 

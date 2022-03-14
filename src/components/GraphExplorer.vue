@@ -73,7 +73,7 @@ export default defineComponent({
   position: absolute; 
   left: 0; 
   top: 0; 
-  background-color: shade(@secondaryBackground, 90%); 
+  background-color: #000; /*shade(@secondaryBackground, 90%); */
   width: 100vw; 
   height: 100vh; 
   cursor: default;
